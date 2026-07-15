@@ -1,0 +1,91 @@
+# Guaw & Miaw V3 - Documentación del Sistema
+
+Esta documentación detalla las nuevas funcionalidades implementadas, la arquitectura del sistema y los procedimientos técnicos para el mantenimiento del POS de Guaw & Miaw.
+
+## 🚀 Resumen de Actualizaciones
+Se ha transformado el sistema base en una solución profesional para tiendas de mascotas, integrando:
+1.  **Lógica de Venta a Granel**: Soporte para pesos (Kg/g) y venta por monto monetario ($).
+2.  **Gestión de Bultos/Sacos**: Sistema de inventario dual (bultos cerrados vs. stock suelto).
+3.  **Control de Caja y Turnos**: Flujo completo de apertura, movimientos y cierre de caja.
+4.  **Diseño Midnight Rose**: Interfaz premium con alto contraste y modo oscuro refinado.
+
+---
+
+## 📦 1. Inventario y Lógica de Granel
+
+### Estructura de Datos (Modelo Product)
+Se han añadido campos críticos para soportar la venta pesada:
+- `is_bulk` (Boolean): Define si el producto se vende por peso.
+- `unit` (String): Unidad de medida (ej. 'kg', 'gr', 'ud').
+- `bulto_stock` (Integer): Cantidad de sacos cerrados en bodega.
+- `bulto_weight` (Float): Peso que contiene cada bulto (ej. 20.0 kg).
+
+### El Flujo de "Apertura de Bulto"
+Para mantener un control exacto, el sistema separa lo que está "en saco" de lo que está "en el contenedor de venta":
+1.  El usuario ve un botón de **Abrir Bulto** en el inventario.
+2.  Al activarlo, el sistema resta **1** de `bulto_stock`.
+3.  Suma el valor de `bulto_weight` al `stock` disponible para venta.
+
+---
+
+## 💰 2. Gestión Financiera (Corte de Caja)
+
+### Estados de Caja
+El sistema protege la integridad de las ventas mediante un control de estados:
+- **Cerrada**: El POS está bloqueado. No se pueden procesar tickets.
+- **Abierta**: El cajero inicia sesión y registra un fondo inicial.
+
+### Movimientos de Efectivo
+- **Entradas**: Dinero extra que ingresa a caja (ej. cambio).
+- **Salidas/Retiros**: Dinero que sale para pagos o resguardo.
+- **Gastos Operativos**: Pagos registrados a proveedores que afectan el balance final.
+
+### Proceso de Cierre (Corte)
+Al finalizar el turno, el sistema compara el **Efectivo Esperado** (Fondo + Ventas + Entradas - Salidas - Gastos) contra el **Efectivo Real** contado por el usuario. Cualquier discrepancia se guarda con un motivo justificado.
+
+---
+
+## 🎨 3. Sistema de Diseño (Midnight Rose)
+
+El sistema utiliza un framework de CSS basado en variables para facilitar la personalización:
+
+### Paleta de Colores (Contraste Refinado)
+- **Brand**: `#FFB7C5` (Rosa Pastel).
+- **Background Main**: `#FDF2F4` (Blanco-Crema suave para evitar fatiga visual).
+- **Text Main**: `#1A1A1A` (Alto contraste para lectura).
+- **Border Subtle**: `rgba(0, 0, 0, 0.08)`.
+
+### Componentes Core
+- `Card`: Contenedores con sombra suave y bordes redondeados (`2rem`).
+- `Button`: Estilo Claymorphism con efectos de elevación al hacer hover.
+- `Modal`: Ventanas emergentes con fondo desenfocado (Glassmorphism).
+
+---
+
+## 🛠️ 4. API Endpoints (V1)
+
+| Recurso | Método | Descripción |
+| :--- | :--- | :--- |
+| `/products` | `GET` | Lista todos los productos. |
+| `/products/<id>/open-bulto` | `POST` | Convierte un bulto en stock suelto. |
+| `/sales` | `POST` | Registra una venta (requiere caja abierta). |
+| `/register/status` | `GET` | Consulta si el turno está activo. |
+| `/register/open` | `POST` | Inicia un nuevo turno. |
+| `/register/close` | `POST` | Finaliza turno y realiza el corte. |
+| `/expenses` | `POST` | Registra un gasto operativo. |
+
+---
+
+## ⚠️ Notas de Mantenimiento
+- **Migraciones**: Si se añaden campos a los modelos de Python, es necesario ejecutar scripts de migración de SQLite o usar `flask-migrate`.
+- **Modo Oscuro**: La preferencia se guarda en `localStorage` bajo la llave `darkMode`.
+- **Seguridad**: El sistema utiliza JWT para autenticación. Asegúrate de que el `SECRET_KEY` en `Config` sea seguro en producción.
+
+---
+
+## 🧹 5. Auditoría y Limpieza
+Se realizó una limpieza profunda del repositorio para eliminar deuda técnica:
+- **Scripts de Migración/Prueba**: Se eliminaron más de 10 scripts `.py` temporales en la raíz del proyecto y backend.
+- **Bases de Datos Duplicadas**: Se consolidó la base de datos, eliminando las copias inactivas y manteniendo únicamente `backend/instance/guaw_miaw.db` como la fuente de verdad.
+- **Archivos de Respaldo**: Se eliminaron archivos `.bak` y logs antiguos (`logs/guawmiaw.log*`).
+- **Documentación Obsoleta**: Se removieron archivos Markdown antiguos (`MASTER_V3.md`, `INSTRUCCIONES_CLAUDE_CODE_FASE1.md`) para mantener la documentación al día.

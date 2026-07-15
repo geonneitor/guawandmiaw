@@ -1,0 +1,638 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── BASE + TEMA GUAW & MIAW (Rojo Marca) ── */
+/* Rojo real de la marca: #C62828 | Rosa claro: #F4BFBF | Crema fondo: #FFF5F5 */
+:root, .theme-pastel {
+  --brand: #C62828;
+  --brand-rgb: 198, 40, 40;
+  --brand-dark: #A31515;
+  --brand-light: #F4BFBF;
+  --brand-text: #FFFFFF;
+
+  --bg-main: #FFF5F5;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(198, 40, 40, 0.06);
+  --text-main: #1A0505;
+  --text-muted: #7B3535;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(198, 40, 40, 0.15);
+  --border-accent: rgba(198, 40, 40, 0.35);
+
+  --status-success: #059669;
+  --status-warning: #D97706;
+  --status-error: #DC2626;
+  --status-info: #2563EB;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+}
+.dark.theme-pastel, .dark .theme-pastel {
+  --bg-main: #1A0505;
+  --bg-card: #2D0A0A;
+  --bg-hover: rgba(198, 40, 40, 0.12);
+  --text-main: #FFE4E4;
+  --text-muted: #E8A0A0;
+  --text-inverse: #1A0505;
+  --border-subtle: rgba(198, 40, 40, 0.15);
+  --border-accent: rgba(198, 40, 40, 0.35);
+}
+
+/* ── TEMA MINT (Verde Bosque) ── */
+.theme-mint {
+  --brand: #34D399;
+  --brand-rgb: 52, 211, 153;
+  --brand-dark: #10B981;
+  --brand-text: #065F46;
+
+  --bg-main: #ECFDF5;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(52, 211, 153, 0.10);
+  --text-main: #022C22;
+  --text-muted: #065F46;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(52, 211, 153, 0.20);
+  --border-accent: rgba(52, 211, 153, 0.45);
+}
+.dark.theme-mint, .dark .theme-mint {
+  --bg-main: #041F17;
+  --bg-card: #063326;
+  --bg-hover: rgba(52, 211, 153, 0.10);
+  --text-main: #CCFDE8;
+  --text-muted: #6EE7B7;
+  --text-inverse: #041F17;
+  --border-subtle: rgba(52, 211, 153, 0.15);
+  --border-accent: rgba(52, 211, 153, 0.35);
+}
+
+/* ── TEMA LAVENDER (Índigo Místico) ── */
+.theme-lavender {
+  --brand: #A78BFA;
+  --brand-rgb: 167, 139, 250;
+  --brand-dark: #7C3AED;
+  --brand-text: #4C1D95;
+
+  --bg-main: #F5F3FF;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(167, 139, 250, 0.10);
+  --text-main: #1E1033;
+  --text-muted: #4C1D95;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(167, 139, 250, 0.20);
+  --border-accent: rgba(167, 139, 250, 0.45);
+}
+.dark.theme-lavender, .dark .theme-lavender {
+  --bg-main: #100820;
+  --bg-card: #1C0F38;
+  --bg-hover: rgba(167, 139, 250, 0.10);
+  --text-main: #EDE9FE;
+  --text-muted: #C4B5FD;
+  --text-inverse: #100820;
+  --border-subtle: rgba(167, 139, 250, 0.15);
+  --border-accent: rgba(167, 139, 250, 0.35);
+}
+
+/* ── TEMA PEACH (Ámbar Cálido) ── */
+.theme-peach {
+  --brand: #FB923C;
+  --brand-rgb: 251, 146, 60;
+  --brand-dark: #EA580C;
+  --brand-text: #7C2D12;
+
+  --bg-main: #FFF7ED;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(251, 146, 60, 0.10);
+  --text-main: #1C0A00;
+  --text-muted: #7C2D12;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(251, 146, 60, 0.20);
+  --border-accent: rgba(251, 146, 60, 0.45);
+}
+.dark.theme-peach, .dark .theme-peach {
+  --bg-main: #1A0A00;
+  --bg-card: #2E1500;
+  --bg-hover: rgba(251, 146, 60, 0.10);
+  --text-main: #FFEDD5;
+  --text-muted: #FDBA74;
+  --text-inverse: #1A0A00;
+  --border-subtle: rgba(251, 146, 60, 0.15);
+  --border-accent: rgba(251, 146, 60, 0.35);
+}
+
+/* ── TEMA SKY (Azul Océano) ── */
+.theme-sky {
+  --brand: #38BDF8;
+  --brand-rgb: 56, 189, 248;
+  --brand-dark: #0284C7;
+  --brand-text: #0C4A6E;
+
+  --bg-main: #F0F9FF;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(56, 189, 248, 0.10);
+  --text-main: #082035;
+  --text-muted: #0C4A6E;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(56, 189, 248, 0.20);
+  --border-accent: rgba(56, 189, 248, 0.45);
+}
+.dark.theme-sky, .dark .theme-sky {
+  --bg-main: #020E1C;
+  --bg-card: #061A2E;
+  --bg-hover: rgba(56, 189, 248, 0.10);
+  --text-main: #E0F2FE;
+  --text-muted: #7DD3FC;
+  --text-inverse: #020E1C;
+  --border-subtle: rgba(56, 189, 248, 0.15);
+  --border-accent: rgba(56, 189, 248, 0.35);
+}
+
+/* ── TEMA OBSIDIAN GOLD (Oro Premium) ── */
+/* Tema "Obsidian Gold" — premium + dorado #D4AF37.
+   NO es el default de la app (default = pastel).
+   Se selecciona manualmente desde Settings > Apariencia.
+   Pensado para modo oscuro sobre fondo obsidiana. */
+.theme-obsidian-gold {
+  --brand: #D4AF37;
+  --brand-rgb: 212, 175, 55;
+  --brand-dark: #B8941F;
+  --brand-text: #6B4F0A;
+
+  --bg-main: #FAF7EF;
+  --bg-card: #FFFFFF;
+  --bg-hover: rgba(212, 175, 55, 0.10);
+  --text-main: #1C1707;
+  --text-muted: #6B5A2A;
+  --text-inverse: #FFFFFF;
+  --border-subtle: rgba(212, 175, 55, 0.20);
+  --border-accent: rgba(212, 175, 55, 0.45);
+
+  --status-success: #059669;
+  --status-warning: #D97706;
+  --status-error:   #DC2626;
+  --status-info:    #2563EB;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+}
+.dark.theme-obsidian-gold, .dark .theme-obsidian-gold {
+  --bg-main: #0E0B05;
+  --bg-card: #1A150A;
+  --bg-hover: rgba(212, 175, 55, 0.10);
+  --text-main: #F8F1D9;
+  --text-muted: #D4B86A;
+  --text-inverse: #0E0B05;
+  --border-subtle: rgba(212, 175, 55, 0.15);
+  --border-accent: rgba(212, 175, 55, 0.35);
+}
+
+/* ── MODO OSCURO GLOBAL (fallback genérico) ── */
+.dark {
+  --bg-main: #0B0B0F;
+  --bg-card: #15151A;
+  --bg-hover: rgba(var(--brand-rgb), 0.12);
+  --text-main: #F4F4F5;
+  --text-muted: #BCBCC4;
+  --text-inverse: #0B0B0F;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(var(--brand-rgb), 0.35);
+}
+
+
+
+@layer base {
+  body {
+    @apply bg-bg-main text-text-main font-body antialiased overflow-x-hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+
+  select option {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+  }
+}
+
+/* Efectos 3D Soft / Claymorphism */
+.soft-card {
+  @apply bg-bg-card rounded-[2rem] border border-white/50 dark:border-white/5 shadow-[0_10px_40px_-10px_rgba(255,183,197,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)];
+}
+
+.soft-button {
+  @apply bg-brand text-white font-bold py-3 px-8 rounded-2xl transition-all duration-300
+         shadow-[0_8px_20px_-5px_rgba(255,183,197,0.4)]
+         hover:bg-brand-dark hover:scale-105 hover:shadow-[0_12px_25px_-5px_rgba(255,183,197,0.5)]
+         active:scale-95;
+}
+
+.input-pastel {
+  @apply bg-bg-card border-2 border-border-subtle rounded-2xl px-5 py-3 transition-all outline-none
+         shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
+         focus:border-brand focus:bg-bg-card;
+}
+
+/* Partículas de "Pelaje/Nube" */
+.fur-particle {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: float var(--dur, 30s) infinite alternate ease-in-out;
+  background: radial-gradient(circle,
+    rgba(var(--brand-rgb), 0.15) 0%,
+    transparent 70%);
+}
+
+@keyframes float {
+  0%   { transform: translate3d(-5%, -5%, 0) scale(1); opacity: 0.3; }
+  50%  { transform: translate3d(10%, 5%, 0) scale(1.15); opacity: 0.5; }
+  100% { transform: translate3d(-2%, 15%, 0) scale(0.9); opacity: 0.2; }
+}
+
+/* Animación de croquetas flotantes (Login) */
+@keyframes croqueta-float {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  33%  { transform: translateY(-10px) rotate(5deg); }
+  66%  { transform: translateY(-5px) rotate(-5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%  { transform: translateX(-10px); }
+  30%  { transform: translateX(10px); }
+  45%  { transform: translateX(-10px); }
+  60%  { transform: translateX(10px); }
+  75%  { transform: translateX(-6px); }
+  90%  { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Custom Selection */
+::selection {
+  background: rgba(var(--brand-rgb), 0.3);
+  color: inherit;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MEJORAS RESPONSIVIDAD - GUAW & MIAW
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 320px) {
+    :root {
+        --sidebar-width: 200px;
+        --header-height: 50px;
+        --density-pad: 0.5rem;
+        --radius: 12px;
+        --radius-lg: 20px;
+    }
+
+    body, .app-container {
+        min-height: 100vh;
+    }
+
+    .top-bar {
+        padding: 0 0.4rem !important;
+        height: 50px !important;
+        gap: 0.25rem !important;
+    }
+
+    .top-bar .user-info {
+        display: none !important;
+    }
+
+    .topbar-clock {
+        min-width: 65px !important;
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .topbar-clock-time {
+        font-size: 0.8rem !important;
+    }
+
+    .topbar-clock-date {
+        display: none !important;
+    }
+
+    #sidebar {
+        width: 180px !important;
+    }
+
+    .sidebar-header {
+        padding: 1rem !important;
+    }
+
+    .sidebar-header .brand-card {
+        padding: 12px !important;
+    }
+
+    .nav-item {
+        padding: 0.6rem 0.8rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    .nav-item span {
+        display: none !important;
+    }
+
+    .nav-item i {
+        min-width: auto !important;
+        margin-right: 0 !important;
+    }
+
+    .main-layout {
+        margin-left: 180px !important;
+    }
+
+    .main-content {
+        padding: 0.5rem !important;
+    }
+
+    /* POS optimización ultra-móvil */
+    .pos-layout {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        height: auto !important;
+    }
+
+    .pos-products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+
+    .product-card {
+        padding: 0.6rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    .pos-cart-section {
+        padding: 1rem !important;
+    }
+
+    /* Modales */
+    .modal-content {
+        max-width: calc(100vw - 1rem) !important;
+        width: calc(100vw - 1rem) !important;
+        border-radius: 12px !important;
+    }
+
+    .modal-header {
+        padding: 1rem !important;
+    }
+
+    .modal-header h3 {
+        font-size: 1.1rem !important;
+    }
+
+    .modal-body {
+        padding: 1rem !important;
+    }
+
+    /* Inputs */
+    .pulpos-input {
+        padding: 0.6rem 1rem !important;
+        height: 36px !important;
+        font-size: 16px !important; /* Previene zoom en iOS */
+    }
+
+    /* Botones */
+    .btn-pulpos-primary,
+    .btn-pulpos-secondary,
+    .btn-icon {
+        min-width: 36px !important;
+        height: 36px !important;
+        padding: 0 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .btn-cobrar {
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    /* Tables */
+    .pulpos-table th,
+    .pulpos-table td {
+        padding: 0.4rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Badges */
+    .badge {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.65rem !important;
+    }
+
+    /* Cards */
+    .pulpos-card {
+        padding: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+
+    .cart-item {
+        padding: 0.5rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    .total-amount {
+        font-size: 2rem !important;
+    }
+
+    .total-label {
+        font-size: 0.75rem !important;
+    }
+
+    /* Filter chips */
+    .filter-chip {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.68rem !important;
+    }
+
+    /* Offcanvas */
+    .offcanvas-panel {
+        width: 100vw !important;
+    }
+
+    /* Notification panel */
+    .notif-panel {
+        width: 100vw !important;
+    }
+
+    /* Dashboard optimizations */
+    .dash-kpi-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+
+    .dash-kpi-card {
+        padding: 0.8rem !important;
+        gap: 0.6rem !important;
+    }
+
+    .dash-kpi-value {
+        font-size: 1.1rem !important;
+    }
+
+    .dash-section-title {
+        font-size: 0.65rem !important;
+    }
+}
+
+@media (max-width: 375px) and (min-width: 321px) {
+    .nav-item span {
+        font-size: 0.8rem !important;
+    }
+
+    .pos-products-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .product-card {
+        font-size: 0.85rem !important;
+    }
+
+    .modal-header h3 {
+        font-size: 1.2rem !important;
+    }
+
+    .pulpos-input {
+        font-size: 16px !important;
+    }
+}
+
+@media (max-height: 500px) {
+    .pos-products-grid {
+        max-height: 40vh !important;
+    }
+
+    .pos-cart-section {
+        max-height: 50vh !important;
+    }
+
+    .modal-content {
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    .main-layout {
+        min-height: auto !important;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    button, .btn-icon, .nav-item, .product-card {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+
+    .nav-item:hover {
+        transform: none !important;
+    }
+
+    .btn-pulpos-primary:hover {
+        transform: none !important;
+    }
+
+    .product-card:hover {
+        transform: none !important;
+    }
+
+    .nav-item:active {
+        transform: scale(0.98) !important;
+    }
+
+    .btn-pulpos-primary:active {
+        transform: scale(0.95) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
+    .pulpos-input {
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 12px;
+    }
+
+    input[type="number"] {
+        -webkit-appearance: textfield;
+    }
+
+    select {
+        padding: 0.75rem 1rem !important;
+        border-radius: 12px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236366f1' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .main-layout {
+        margin-left: 250px !important;
+    }
+
+    .pos-layout {
+        grid-template-columns: 1fr 320px !important;
+        gap: 1.5rem !important;
+    }
+
+    .pos-cart-section {
+        min-height: 55vh !important;
+    }
+
+    .dashboard-main-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+    .main-content {
+        max-width: 1200px !important;
+    }
+
+    .pos-layout {
+        gap: 1.5rem !important;
+        grid-template-columns: 1fr 320px !important;
+    }
+}
+
+@media (min-width: 1366px) {
+    .main-content {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .pos-layout {
+        grid-template-columns: 1fr 380px;
+        gap: 2.5rem;
+    }
+}
+
+/* ── CUSTOM SCROLLBAR GUAW & MIAW ── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--brand-light);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--brand);
+}
