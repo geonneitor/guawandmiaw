@@ -1,6 +1,7 @@
 import { useAuthStore } from '../store/useAuthStore'
 
-const BASE_URL = '/api/v1'
+// Use VITE_API_URL if defined, otherwise fallback to local /api/v1 (useful for local testing)
+const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 async function request(method, path, body = null) {
   const { accessToken, logout } = useAuthStore.getState()

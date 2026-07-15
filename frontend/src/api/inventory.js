@@ -12,7 +12,8 @@ export const inventoryApi = {
   importExcel: (formData) => api.post('/products/import', formData),
   exportExcel: async () => {
     const token = getAccessToken();
-    const res = await fetch('/api/v1/products/export', {
+    const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+    const res = await fetch(`${baseUrl}/products/export`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) throw new Error('Error al exportar');
