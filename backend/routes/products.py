@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_file
 from backend.extensions import db
-from backend.models import Product, Supplier, Category, AuditLog
+from backend.models import Product, Supplier, Category, AuditLog, InventoryTransaction
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 import time
@@ -12,8 +12,8 @@ products_bp = Blueprint('products', __name__)
 @products_bp.route('/products', methods=['GET'])
 @require_auth('admin', 'encargado', 'cajero', 'vendedor-caja')
 def get_products():
-    print(f"[GET] /products - Listing all products")
-    products = Product.query.all()
+    print(f"[GET] /products - Listing all active products")
+    products = Product.query.filter_by(is_active=True).all()
     return success_response([p.to_dict() for p in products])
 
 @products_bp.route('/products', methods=['POST'])
@@ -126,12 +126,14 @@ def update_product(id):
 @products_bp.route('/products/<int:id>', methods=['DELETE'])
 @require_auth('admin', 'encargado')
 def delete_product(id):
-    print(f"[DELETE] /products/{id} - Deleting product")
+    print(f"[DELETE] /products/{id} - Soft deleting product")
     product = db.get_or_404(Product, id)
     try:
-        db.session.delete(product)
+        product.is_active = False
+        audit = AuditLog(action="BORRADO_PRODUCTO", description=f"Producto archivado: {product.name}")
+        db.session.add(audit)
         db.session.commit()
-        return success_response(None, "Producto eliminado")
+        return success_response(None, "Producto archivado correctamente")
     except Exception as e:
         db.session.rollback()
         return error_response(str(e), 500)

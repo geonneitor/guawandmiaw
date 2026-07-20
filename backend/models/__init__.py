@@ -8,6 +8,8 @@ from .category import Category
 from .brand import Brand
 from .token_blocklist import TokenBlocklist
 from .audit import AuditLog
+from .inventory_transaction import InventoryTransaction
+from .purchase_order import PurchaseOrder, PurchaseOrderItem
 
 __all__ = [
     'User',
@@ -21,5 +23,8 @@ __all__ = [
     'Category',
     'Brand',
     'TokenBlocklist',
-    'AuditLog'
+    'AuditLog',
+    'InventoryTransaction',
+    'PurchaseOrder',
+    'PurchaseOrderItem'
 ]

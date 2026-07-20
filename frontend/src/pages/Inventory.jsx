@@ -26,6 +26,8 @@ import { useNotificationStore } from '../store/useNotificationStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { inventoryApi } from '../api/inventory'
 import Suppliers from './Suppliers'
+import BarcodeLabelPrinter from '../components/BarcodeLabelPrinter'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState('products')
@@ -42,6 +44,9 @@ const Inventory = () => {
   const [loading, setLoading] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [showPrinter, setShowPrinter] = useState(false)
+  const [productsToPrint, setProductsToPrint] = useState([])
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
   const fileInputRef = useRef(null)
   
   const [formData, setFormData] = useState({
@@ -171,18 +176,42 @@ const Inventory = () => {
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
+    if (window.confirm('¿Estás seguro de archivar este producto? (Soft Delete)')) {
       try {
         const res = await inventoryApi.deleteProduct(id)
         if (res.success) {
-          addNotification('Producto eliminado', 'success')
+          addNotification('Producto archivado', 'success')
           fetchProducts()
         }
       } catch (err) {
-        addNotification('Error al eliminar', 'error')
+        addNotification('Error al archivar', 'error')
       }
     }
   }
+
+  const handlePrintLabels = (prod = null) => {
+    if (prod) {
+      setProductsToPrint([prod])
+    } else {
+      setProductsToPrint(filteredProducts)
+    }
+    setShowPrinter(true)
+  }
+
+  useEffect(() => {
+    if (isScannerOpen) {
+      const scanner = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 5 })
+      scanner.render(
+        (text) => {
+          setSearch(text)
+          setIsScannerOpen(false)
+          scanner.clear()
+        },
+        (err) => { /* ignore */ }
+      )
+      return () => scanner.clear().catch(e => {})
+    }
+  }, [isScannerOpen])
 
   const handleOpenBulto = async (id) => {
     try {
@@ -290,13 +319,17 @@ const Inventory = () => {
                   <input 
                     type="text" 
                     placeholder="Buscar por nombre o código..."
-                    className="w-full pl-12 pr-4 py-2 bg-transparent outline-none font-bold text-text-main"
+                    className="w-full pl-12 pr-12 py-2 bg-transparent outline-none font-bold text-text-main"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
+                  <button onClick={() => setIsScannerOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand hover:text-brand-light transition-colors" title="Escanear con cámara">
+                    📷
+                  </button>
                 </div>
               </Card>
               <div className="flex gap-2 w-full md:w-auto">
+                <Button variant="secondary" onClick={() => handlePrintLabels()} title="Imprimir Etiquetas Filtradas">🖨️ Etiquetas</Button>
                 <Button 
                   variant={showFilters || selectedCategory !== 'Todos' ? 'primary' : 'secondary'} 
                   icon={Filter}
@@ -426,8 +459,9 @@ const Inventory = () => {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => handlePrintLabels(prod)} className="p-2 text-text-muted hover:text-brand" title="Imprimir Etiqueta">🖨️</button>
                             <button onClick={() => handleOpenModal(prod)} className="p-2 text-text-muted hover:text-brand"><Edit3 size={16} /></button>
-                            <button onClick={() => handleDelete(prod.id)} className="p-2 text-text-muted hover:text-red-500"><Trash2 size={16} /></button>
+                            <button onClick={() => handleDelete(prod.id)} className="p-2 text-text-muted hover:text-red-500" title="Archivar"><Trash2 size={16} /></button>
                           </div>
                         </td>
                       </tr>
@@ -659,6 +693,17 @@ const Inventory = () => {
           </div>
         </form>
       </Modal>
+
+      <Modal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} title="Escanear Código">
+        <div id="reader" className="w-full h-[300px]"></div>
+      </Modal>
+
+      {showPrinter && (
+        <BarcodeLabelPrinter 
+          products={productsToPrint} 
+          onClose={() => setShowPrinter(false)} 
+        />
+      )}
     </PageWrapper>
   )
 }

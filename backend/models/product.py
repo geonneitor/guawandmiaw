@@ -16,7 +16,8 @@ class Product(db.Model):
     bulto_stock = db.Column(db.Integer, default=0)
     bulto_weight = db.Column(db.Float, default=0.0)
     barcode = db.Column(db.String(50), unique=True, nullable=True)
-    
+    location = db.Column(db.String(100), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
     # Foreign Keys
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=True)
@@ -57,6 +58,8 @@ class Product(db.Model):
             'bulto_stock': self.bulto_stock,
             'bulto_weight': round(float(self.bulto_weight), 3) if self.bulto_weight else 0,
             'barcode': self.barcode,
+            'location': self.location,
+            'is_active': self.is_active,
             'category_id': self.category_id,
             'category': self.category.name if self.category else 'General',
             'brand_id': self.brand_id,

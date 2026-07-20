@@ -20,6 +20,7 @@ import Sales from './pages/Sales'
 import Suppliers from './pages/Suppliers'
 import Expenses from './pages/Expenses'
 import Users from './pages/Users'
+import Restock from './pages/Restock'
 
 const Placeholder = ({ name }) => (
   <PageWrapper className="flex flex-col items-center justify-center min-h-[80vh] p-8 text-center">
@@ -77,7 +78,7 @@ const AppContent = () => {
       <Notifications />
       
       <main 
-        className={`transition-all duration-300 min-h-screen print:pl-0 ${(!isLoginPage && isAuthenticated) ? (sidebarOpen ? 'pl-[276px]' : 'pl-[104px]') : ''}`}
+        className={`transition-all duration-300 min-h-screen pb-20 md:pb-0 print:pl-0 ${(!isLoginPage && isAuthenticated) ? (sidebarOpen ? 'md:pl-[276px]' : 'md:pl-[104px]') : ''}`}
       >
         <div className={!isLoginPage ? "max-w-[1600px] mx-auto p-8" : ""}>
           <AnimatePresence mode="wait">
@@ -97,6 +98,7 @@ const AppContent = () => {
               <Route path="/suppliers" element={isAuthenticated ? <Suppliers /> : <Navigate to="/login" />} />
               <Route path="/sales"     element={isAuthenticated ? <Sales /> : <Navigate to="/login" />} />
               <Route path="/expenses"  element={isAuthenticated ? <Expenses /> : <Navigate to="/login" />} />
+              <Route path="/restock"   element={isAuthenticated ? <Restock /> : <Navigate to="/login" />} />
               <Route path="/users"     element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
               
               <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />

@@ -138,16 +138,41 @@ const Sidebar = () => {
   const { sidebarOpen, toggleSidebar, darkMode, toggleDarkMode } = useUIStore()
   const { user, logout } = useAuthStore()
  
-  const menuItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: [] },
-    { to: '/pos',       icon: ShoppingCart,    label: 'Vender',     roles: [] },
-    { to: '/inventory', icon: Package,         label: 'Inventario', roles: [] },
-    { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] }, // Ventas y Gastos como sub-tabs
-    { to: '/reports',   icon: BarChart3,       label: 'Reportes',   roles: ['admin', 'encargado'] },
-    { to: '/settings',  icon: SettingsIcon,    label: 'Ajustes',    roles: [] },
+  const menuGroups = [
+    {
+      title: 'Operaciones',
+      items: [
+        { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: [] },
+        { to: '/pos',       icon: ShoppingCart,    label: 'Vender',     roles: [] },
+        { to: '/restock',   icon: Truck,           label: 'Resurtido',  roles: ['admin', 'encargado'] }
+      ]
+    },
+    {
+      title: 'Administración',
+      items: [
+        { to: '/inventory', icon: Package,         label: 'Inventario', roles: [] },
+        { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] },
+        { to: '/reports',   icon: BarChart3,       label: 'Reportes',   roles: ['admin', 'encargado'] }
+      ]
+    },
+    {
+      title: 'Sistema',
+      items: [
+        { to: '/settings',  icon: SettingsIcon,    label: 'Ajustes',    roles: [] }
+      ]
+    }
+  ]
+
+  const mobileMenuItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: [] },
+    { to: '/pos',       icon: ShoppingCart,    label: 'Vender', roles: [] },
+    { to: '/inventory', icon: Package,         label: 'Stock', roles: [] },
+    { to: '/restock',   icon: Truck,           label: 'Cargar', roles: ['admin', 'encargado'] },
+    { to: '/settings',  icon: SettingsIcon,    label: 'Más', roles: [] }
   ]
  
   return (
+    <>
     <motion.aside
       animate={{ 
         width: sidebarOpen ? 260 : 88,
@@ -155,7 +180,7 @@ const Sidebar = () => {
         opacity: 1
       }}
       initial={{ x: -100, opacity: 0 }}
-      className="fixed left-4 top-4 bottom-4 bg-bg-card/60 dark:bg-bg-card/40 backdrop-blur-2xl border border-white/20 dark:border-white/5 flex flex-col z-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden transition-colors duration-500 print:hidden"
+      className="hidden md:flex fixed left-4 top-4 bottom-4 bg-bg-card/60 dark:bg-bg-card/40 backdrop-blur-2xl border border-white/20 dark:border-white/5 flex-col z-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] overflow-hidden transition-colors duration-500 print:hidden"
     >
       {/* Header / Logo & Theme Toggle */}
       <div className="p-6 flex items-center justify-between">
@@ -190,16 +215,25 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => (
-          <RoleGuard key={item.to} roles={item.roles}>
-            <NavItem
-              to={item.to}
-              icon={item.icon}
-              label={item.label}
-              collapsed={!sidebarOpen}
-            />
-          </RoleGuard>
+      <nav className="flex-1 px-3 py-2 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+        {menuGroups.map((group, idx) => (
+          <div key={idx} className="flex flex-col gap-1">
+            {sidebarOpen && (
+              <span className="px-4 text-[10px] font-black tracking-widest uppercase text-text-muted mb-1 mt-2">
+                {group.title}
+              </span>
+            )}
+            {group.items.map((item) => (
+              <RoleGuard key={item.to} roles={item.roles}>
+                <NavItem
+                  to={item.to}
+                  icon={item.icon}
+                  label={item.label}
+                  collapsed={!sidebarOpen}
+                />
+              </RoleGuard>
+            ))}
+          </div>
         ))}
       </nav>
 
@@ -233,6 +267,25 @@ const Sidebar = () => {
         {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
       </button>
     </motion.aside>
+
+    {/* Bottom Navigation para Móviles */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-bg-card/90 backdrop-blur-lg border-t border-border-subtle flex items-center justify-around z-50 print:hidden pb-safe">
+      {mobileMenuItems.map((item) => (
+        <RoleGuard key={item.to} roles={item.roles}>
+          <NavLink
+            to={item.to}
+            className={({ isActive }) => `
+              flex flex-col items-center justify-center w-full h-full p-2 transition-colors
+              ${isActive ? 'text-brand' : 'text-text-muted hover:text-brand'}
+            `}
+          >
+            <item.icon size={20} strokeWidth={2.5} />
+            <span className="text-[10px] font-bold mt-1 tracking-tight">{item.label}</span>
+          </NavLink>
+        </RoleGuard>
+      ))}
+    </nav>
+    </>
   )
 }
 
