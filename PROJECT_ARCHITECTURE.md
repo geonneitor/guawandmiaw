@@ -69,4 +69,14 @@ El flujo protege la integridad de los ingresos de la tienda:
 - **Modelos:** Se ha asegurado la sincronización del modelo `Product` (ej. se eliminó la columna `location` que causaba conflictos con consultas antiguas).
 
 ---
-*Documentación consolidada y depurada para Guaw & Miaw V3 - Actualizada post-auditoría PWA y Mobile.*
+
+## 🤖 6. Asistente IA (Fígaro & Chila - Agentic AI)
+- **Modelos:** Se utiliza `llama-3.3-70b-versatile` de Groq para procesamiento ultrarrápido y generación conversacional.
+- **Agentic Capabilities (Tool Calling):** La IA dejó de ser un simple chatbot y ahora funciona como un **Agente** capaz de ejecutar funciones sobre el sistema:
+  - `check_inventory(nombre)`: Consulta el stock real en la BD.
+  - `open_cash_register(amount)`: Inicia un turno de caja automáticamente desde la BD mediante un comando de chat.
+  - `add_to_cart(id, cantidad)`: Intercepta la acción en el frontend mediante eventos para inyectar productos en el `useCartStore` y lanza notificaciones interactivas para que el usuario proceda al pago.
+- **Guardrails Dinámicos:** El comportamiento de la IA está controlado en su System Prompt con una `temperature` de `0.1` para respuestas clínicas. Tiene un contexto inyectado (hora exacta, producto más vendido hoy, ventas totales, etc.) para fungir como asistente administrativo, calculadora rápida y proveedor de reportes básicos.
+
+---
+*Documentación consolidada y depurada para Guaw & Miaw V3 - Actualizada post-auditoría PWA, Mobile e Inteligencia Artificial Agentic.*
