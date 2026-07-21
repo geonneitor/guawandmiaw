@@ -254,7 +254,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-4">
           <img src={mascotaPose1} alt="Mascota" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-md hover:scale-110 transition-transform duration-300" />
           <div>
-            <h1 className="text-4xl font-extrabold font-sans text-[#C62828] tracking-tight drop-shadow-sm">Panel de Control</h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold font-sans text-[#C62828] tracking-tight drop-shadow-sm">Panel de Control</h1>
             <p className="text-text-muted font-bold">Sistema Central Guaw & Miaw 🐾</p>
           </div>
         </div>

@@ -104,7 +104,7 @@ const Clients = () => {
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-brand uppercase tracking-tighter">Directorio de Clientes</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-brand uppercase tracking-tighter">Directorio de Clientes</h1>
           <p className="text-text-muted font-medium">Gestiona tu base de clientes y puntos de fidelidad</p>
         </div>
         <Button icon={Plus} onClick={() => handleOpenModal()}>Nuevo Cliente</Button>

@@ -3,6 +3,7 @@ from backend.extensions import db
 from backend.models import Sale, SaleItem, Product, CashRegister, CashMovement, Expense, User, Client, AuditLog
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone, timedelta
 
 sales_bp = Blueprint('sales', __name__)
@@ -12,7 +13,11 @@ sales_bp = Blueprint('sales', __name__)
 def get_sales():
     print("[GET] /sales - Listing recent sales")
     try:
-        sales = Sale.query.order_by(Sale.date.desc()).limit(100).all()
+        sales = Sale.query.options(
+            joinedload(Sale.items),
+            joinedload(Sale.user),
+            joinedload(Sale.client)
+        ).order_by(Sale.date.desc()).limit(100).all()
         result = []
         for s in sales:
             items = [{'product_name': i.product_name, 'quantity': i.quantity, 'price': i.price_at_sale, 'subtotal': i.subtotal} for i in s.items]
@@ -52,7 +57,7 @@ def create_sale():
 
     user_obj = User.query.filter_by(username=seller_name).first()
     total_sale = 0
-    new_sale = Sale(total=0, payment_method=payment_method, user_id=user_obj.id if user_obj else 1, client_id=client_id)
+    new_sale = Sale(total=0, payment_method=payment_method, user_id=user_obj.id if user_obj else 1, client_id=client_id, cash_register_id=open_register.id)
     
     override_date_str = data.get('date')
     if override_date_str:
@@ -75,22 +80,20 @@ def create_sale():
             required_qty_stock = round(raw_qty, 3)
             current_stock = round(float(product.stock), 3)
 
-            if product.is_bulk:
-                while current_stock < required_qty_stock and product.bulto_stock > 0:
-                    product.bulto_stock -= 1
-                    product.stock += product.bulto_weight
-                    current_stock = round(float(product.stock), 3)
-                    print(f"[AUTO] Bulto de {product.bulto_weight}kg abierto para {product.name}. Nuevo stock: {current_stock}")
+            # La apertura automática de bultos fue removida. Debe abrirse explícitamente desde el inventario o POS.
 
             if current_stock < required_qty_stock:
                 print(f"[ERROR] Stock insuficiente para {product.name}: {current_stock} < {required_qty_stock}")
-                raise Exception(f"Stock insuficiente para {product.name} (Disponible: {current_stock})")
+                if product.is_bulk:
+                    raise Exception(f"Stock suelto insuficiente para {product.name} (Disponible: {current_stock}). Ve a Inventario y abre un bulto físico.")
+                else:
+                    raise Exception(f"Stock insuficiente para {product.name} (Disponible: {current_stock})")
             
             product.stock = round(current_stock - required_qty_stock, 3)
             
             unit_price = product.price
-            # Subtotal: siempre entero (sin centavos)
-            subtotal = int(round(product.price * required_qty))
+            # Subtotal: con centavos
+            subtotal = round(product.price * required_qty, 2)
             
             # Simple promo logic (if applicable)
             if hasattr(product, 'promo_active') and product.promo_active:
@@ -105,10 +108,10 @@ def create_sale():
                         unit_discount = product.price * ((product.promo_discount or 0) / 100)
                     
                     discounted_unit_price = product.price - unit_discount
-                    subtotal = int(round(
-                        (groups * product.promo_min_quantity * discounted_unit_price) + (remainder * product.price)
-                    ))
-                    unit_price = int(round(subtotal / required_qty)) if required_qty else product.price
+                    subtotal = round(
+                        (groups * product.promo_min_quantity * discounted_unit_price) + (remainder * product.price), 2
+                    )
+                    unit_price = round(subtotal / required_qty, 2) if required_qty else product.price
 
             sale_item = SaleItem(
                 sale_id=new_sale.id,
@@ -121,13 +124,13 @@ def create_sale():
             db.session.add(sale_item)
             total_sale += subtotal
         
-        new_sale.total = int(round(total_sale))  # Total siempre entero
+        new_sale.total = round(total_sale, 2)  # Total con decimales
         db.session.commit()
         
         return success_response({
             "sale_id": new_sale.id,
             "folio": f"GM-{1000 + new_sale.id}",
-            "total": int(round(new_sale.total))
+            "total": round(new_sale.total, 2)
         }, "Venta registrada con éxito", 201)
         
     except Exception as e:
@@ -143,12 +146,14 @@ def get_stats():
         today = datetime.now(timezone.utc).date()
         start_of_today = datetime.combine(today, datetime.min.time())
         # Solo incluir ventas completadas
-        sales_today = Sale.query.filter(Sale.date >= start_of_today, Sale.status == 'completed').order_by(Sale.date.desc()).all()
+        sales_today = Sale.query.options(
+            joinedload(Sale.user)
+        ).filter(Sale.date >= start_of_today, Sale.status == 'completed').order_by(Sale.date.desc()).all()
 
         total_sales = sum(s.total for s in sales_today)
         transaction_count = len(sales_today)
-        # Ticket promedio: entero (sin centavos)
-        avg_ticket = int(round(total_sales / transaction_count)) if transaction_count > 0 else 0
+        # Ticket promedio: con centavos
+        avg_ticket = round(total_sales / transaction_count, 2) if transaction_count > 0 else 0
 
         recent_sales = []
         for s in sales_today[:5]:

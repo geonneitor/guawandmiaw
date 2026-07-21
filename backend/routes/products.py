@@ -3,6 +3,7 @@ from backend.extensions import db
 from backend.models import Product, Supplier, Category, AuditLog, InventoryTransaction
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
+from sqlalchemy.orm import joinedload
 import time
 import random
 from datetime import date, datetime
@@ -13,7 +14,11 @@ products_bp = Blueprint('products', __name__)
 @require_auth('admin', 'encargado', 'cajero', 'vendedor-caja')
 def get_products():
     print(f"[GET] /products - Listing all active products")
-    products = Product.query.filter_by(is_active=True).all()
+    products = Product.query.options(
+        joinedload(Product.category),
+        joinedload(Product.brand),
+        joinedload(Product.supplier)
+    ).filter_by(is_active=True).all()
     return success_response([p.to_dict() for p in products])
 
 @products_bp.route('/products', methods=['POST'])

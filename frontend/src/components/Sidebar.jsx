@@ -142,17 +142,15 @@ const Sidebar = () => {
     {
       title: 'Operaciones',
       items: [
-        { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: [] },
-        { to: '/pos',       icon: ShoppingCart,    label: 'Vender',     roles: [] },
-        { to: '/restock',   icon: Truck,           label: 'Resurtido',  roles: ['admin', 'encargado'] }
+        { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: ['admin', 'encargado'] },
+        { to: '/pos',       icon: ShoppingCart,    label: 'Vender',     roles: [] }
       ]
     },
     {
       title: 'Administración',
       items: [
-        { to: '/inventory', icon: Package,         label: 'Inventario', roles: [] },
-        { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] },
-        { to: '/reports',   icon: BarChart3,       label: 'Reportes',   roles: ['admin', 'encargado'] }
+        { to: '/inventory', icon: Package,         label: 'Inventario', roles: ['admin', 'encargado'] },
+        { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] }
       ]
     },
     {
@@ -164,11 +162,11 @@ const Sidebar = () => {
   ]
 
   const mobileMenuItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: [] },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: ['admin', 'encargado'] },
     { to: '/pos',       icon: ShoppingCart,    label: 'Vender', roles: [] },
-    { to: '/inventory', icon: Package,         label: 'Stock', roles: [] },
-    { to: '/restock',   icon: Truck,           label: 'Cargar', roles: ['admin', 'encargado'] },
-    { to: '/settings',  icon: SettingsIcon,    label: 'Más', roles: [] }
+    { to: '/inventory', icon: Package,         label: 'Stock',  roles: ['admin', 'encargado'] },
+    { to: '/corte',     icon: Calculator,      label: 'Caja',   roles: [] },
+    { to: '/settings',  icon: SettingsIcon,    label: 'Más',    roles: [] }
   ]
  
   return (

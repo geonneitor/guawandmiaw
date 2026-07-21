@@ -24,24 +24,27 @@ import Badge from '../design-system/components/Badge'
 import Modal from '../design-system/components/Modal'
 import { useNotificationStore } from '../store/useNotificationStore'
 import { useAuthStore } from '../store/useAuthStore'
+import { useInventoryStore } from '../store/useInventoryStore'
 import { inventoryApi } from '../api/inventory'
 import Suppliers from './Suppliers'
+import Restock from './Restock'
 import BarcodeLabelPrinter from '../components/BarcodeLabelPrinter'
-import { Html5QrcodeScanner } from 'html5-qrcode'
+import BarcodeCameraScanner from '../components/BarcodeCameraScanner'
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState('products')
   const [search, setSearch] = useState('')
-  const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState(['General'])
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
+  const [visibleCount, setVisibleCount] = useState(40)
   const [showFilters, setShowFilters] = useState(false)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const { user } = useAuthStore()
   
+  const { products, categories, loadingProducts, fetchProducts } = useInventoryStore()
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
-  const [loading, setLoading] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [showPrinter, setShowPrinter] = useState(false)
@@ -72,24 +75,17 @@ const Inventory = () => {
   const { addNotification } = useNotificationStore()
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    setVisibleCount(40)
+  }, [debouncedSearch, selectedCategory])
+
+  useEffect(() => {
     fetchProducts()
   }, [])
-
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const res = await inventoryApi.getProducts()
-      if (res.success) {
-        setProducts(res.data)
-        const cats = ['Todos', ...new Set(res.data.map(p => p.category || 'General').filter(Boolean))]
-        setCategories(cats)
-      }
-    } catch (err) {
-      addNotification('Error al cargar productos', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleImportExcel = async (e) => {
     const file = e.target.files[0]
@@ -103,7 +99,7 @@ const Inventory = () => {
       const res = await inventoryApi.importExcel(formData)
       if (res.success) {
         addNotification(res.message || 'Inventario importado correctamente', 'success')
-        fetchProducts()
+        fetchProducts(true)
       } else {
         addNotification(res.error || 'Error al importar el archivo', 'error')
       }
@@ -168,7 +164,7 @@ const Inventory = () => {
       if (res.success) {
         addNotification(editingProduct ? 'Producto actualizado' : 'Producto creado', 'success')
         setIsModalOpen(false)
-        fetchProducts()
+        fetchProducts(true)
       }
     } catch (err) {
       addNotification('Error al guardar producto', 'error')
@@ -181,7 +177,7 @@ const Inventory = () => {
         const res = await inventoryApi.deleteProduct(id)
         if (res.success) {
           addNotification('Producto archivado', 'success')
-          fetchProducts()
+          fetchProducts(true)
         }
       } catch (err) {
         addNotification('Error al archivar', 'error')
@@ -198,27 +194,12 @@ const Inventory = () => {
     setShowPrinter(true)
   }
 
-  useEffect(() => {
-    if (isScannerOpen) {
-      const scanner = new Html5QrcodeScanner('reader', { qrbox: { width: 250, height: 250 }, fps: 5 })
-      scanner.render(
-        (text) => {
-          setSearch(text)
-          setIsScannerOpen(false)
-          scanner.clear()
-        },
-        (err) => { /* ignore */ }
-      )
-      return () => scanner.clear().catch(e => {})
-    }
-  }, [isScannerOpen])
-
   const handleOpenBulto = async (id) => {
     try {
       const res = await inventoryApi.openBulto(id)
       if (res.success) {
         addNotification(res.message, 'success')
-        fetchProducts()
+        fetchProducts(true)
       }
     } catch (err) {
       addNotification(err.response?.data?.error || 'Error al abrir bulto', 'error')
@@ -227,19 +208,19 @@ const Inventory = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-        (p.barcode && p.barcode.includes(search))
+      const matchesSearch = p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+        (p.barcode && p.barcode.includes(debouncedSearch))
       const matchesCategory = selectedCategory === 'Todos' || (p.category || 'General') === selectedCategory
       return matchesSearch && matchesCategory
     })
-  }, [search, selectedCategory, products])
+  }, [debouncedSearch, selectedCategory, products])
 
   return (
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-sans font-extrabold tracking-tight text-[#C62828]">Inventario</h1>
-          <p className="text-text-muted font-medium">Gestión de stock y bultos a granel</p>
+          <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-[#C62828]">Inventario</h1>
+          <p className="text-sm md:text-base text-text-muted font-medium">Gestión de stock y bultos a granel</p>
         </div>
         
         <div className="flex bg-bg-card/50 backdrop-blur-sm p-1.5 rounded-[1.5rem] border border-border-subtle shadow-sm self-start">
@@ -255,11 +236,23 @@ const Inventory = () => {
           >
             Promociones
           </button>
+          <button 
+            onClick={() => setActiveTab('suppliers')}
+            className={`px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'suppliers' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+          >
+            Proveedores
+          </button>
+          <button 
+            onClick={() => setActiveTab('restock')}
+            className={`px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'restock' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+          >
+            Resurtido
+          </button>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'promos' ? (
+        {activeTab === 'promos' && (
           <motion.div key="promos" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.filter(p => p.promo_active).length === 0 ? (
               <div className="col-span-full py-20 flex flex-col items-center text-text-muted">
@@ -310,7 +303,8 @@ const Inventory = () => {
               ))
             )}
           </motion.div>
-        ) : (
+        )}
+        {activeTab === 'products' && (
           <motion.div key="products" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
             <div className="flex flex-col md:flex-row gap-4 items-center">
               <Card className="flex-1 p-3" padding="p-3">
@@ -390,7 +384,7 @@ const Inventory = () => {
             </AnimatePresence>
 
             <Card className="overflow-hidden" padding="p-0">
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-bg-main/50 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-subtle">
@@ -403,7 +397,7 @@ const Inventory = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-subtle">
-                    {filteredProducts.map((prod) => (
+                    {filteredProducts.slice(0, visibleCount).map((prod) => (
                       <tr key={prod.id} className="hover:bg-bg-hover transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
@@ -466,7 +460,7 @@ const Inventory = () => {
                         </td>
                       </tr>
                     ))}
-                    {filteredProducts.length === 0 && !loading && (
+                    {filteredProducts.length === 0 && !loadingProducts && (
                       <tr>
                         <td colSpan="6" className="px-6 py-20 text-center text-text-muted italic text-sm">
                           No hay productos que coincidan con la búsqueda
@@ -476,7 +470,82 @@ const Inventory = () => {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Mobile View */}
+              <div className="md:hidden flex flex-col divide-y divide-border-subtle">
+                {filteredProducts.slice(0, visibleCount).map((prod) => (
+                  <div key={prod.id} className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex shrink-0 items-center justify-center border ${prod.is_bulk ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-brand/5 text-brand border-brand/10'}`}>
+                          {prod.is_bulk ? <Scale size={20} /> : <Package size={20} />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-text-main line-clamp-2">{prod.name}</p>
+                          <p className="text-[10px] text-text-muted font-mono">{prod.barcode}</p>
+                        </div>
+                      </div>
+                      <p className="font-black text-brand whitespace-nowrap pl-2">${prod.price}</p>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm">
+                      <Badge variant="info" size="sm">{prod.category || 'General'}</Badge>
+                      <div className="flex items-center gap-2">
+                         <p className={`font-black ${prod.stock <= (prod.min_stock || 0) ? 'text-amber-500' : 'text-green-600'}`}>
+                           {prod.is_bulk 
+                             ? prod.bulto_weight > 0 
+                               ? `${( (prod.stock + (prod.bulto_stock * prod.bulto_weight)) / prod.bulto_weight ).toFixed(1)} Bts`
+                               : `${prod.stock.toFixed(2)} Kg`
+                             : `${prod.stock} uds`}
+                         </p>
+                      </div>
+                    </div>
+
+                    {prod.is_bulk && prod.bulto_stock > 0 && (
+                      <div className="bg-amber-50/50 rounded-lg p-2 flex justify-between items-center border border-amber-500/10 mt-1">
+                         <span className="text-xs text-amber-600 font-bold">{prod.bulto_stock} bulto(s) cerrado(s)</span>
+                         <button 
+                           onClick={() => handleOpenBulto(prod.id)}
+                           className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-black shadow-sm"
+                         >
+                           Abrir Bulto
+                         </button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 mt-1 pt-3 border-t border-border-subtle/50">
+                      <button onClick={() => handlePrintLabels(prod)} className="p-2 text-text-muted hover:text-brand bg-bg-main rounded-lg"><span className="text-lg">🖨️</span></button>
+                      <button onClick={() => handleOpenModal(prod)} className="p-2 text-text-muted hover:text-brand bg-bg-main rounded-lg"><Edit3 size={18} /></button>
+                      <button onClick={() => handleDelete(prod.id)} className="p-2 text-text-muted hover:text-red-500 bg-bg-main rounded-lg"><Trash2 size={18} /></button>
+                    </div>
+                  </div>
+                ))}
+                {filteredProducts.length === 0 && !loadingProducts && (
+                  <div className="p-10 text-center text-text-muted italic text-sm">
+                    No hay productos que coincidan
+                  </div>
+                )}
+              </div>
+
+              {visibleCount < filteredProducts.length && (
+                <button 
+                  onClick={() => setVisibleCount(v => v + 40)}
+                  className="w-full py-4 bg-brand/5 text-brand font-bold hover:bg-brand/10 transition-colors"
+                >
+                  Mostrar más productos ({filteredProducts.length - visibleCount} restantes)
+                </button>
+              )}
             </Card>
+          </motion.div>
+        )}
+        {activeTab === 'suppliers' && (
+          <motion.div key="suppliers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <Suppliers isTab={true} />
+          </motion.div>
+        )}
+        {activeTab === 'restock' && (
+          <motion.div key="restock" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <Restock isTab={true} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -519,7 +588,42 @@ const Inventory = () => {
               </div>
             </div>
 
-            <Input label="Código de Barras" value={formData.barcode || ''} onChange={(e) => setFormData({...formData, barcode: e.target.value})} />
+            <div className="flex flex-col gap-1 md:col-span-1">
+              <label className="text-xs font-black text-text-main uppercase tracking-widest ml-1">Código de Barras</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 bg-bg-main border border-border-subtle rounded-xl px-4 py-3 text-text-main font-bold outline-none focus:border-brand/50 transition-colors min-w-0"
+                  value={formData.barcode || ''}
+                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                  placeholder="Escanea o escribe"
+                />
+                <Button 
+                  variant="secondary" 
+                  type="button" 
+                  onClick={() => {
+                    let newBarcode = '';
+                    let exists = true;
+                    while(exists) {
+                      const prefix = '200';
+                      const random9 = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+                      const base12 = prefix + random9;
+                      let sum = 0;
+                      for (let i = 0; i < 12; i++) {
+                        sum += parseInt(base12[i]) * (i % 2 === 0 ? 1 : 3);
+                      }
+                      const checksum = (10 - (sum % 10)) % 10;
+                      newBarcode = base12 + checksum;
+                      exists = products.some(p => p.barcode === newBarcode);
+                    }
+                    setFormData({...formData, barcode: newBarcode});
+                  }}
+                  title="Generar EAN-13 automático"
+                >
+                  Generar
+                </Button>
+              </div>
+            </div>
             
             <div className="flex flex-col gap-1">
               <label className="text-xs font-black text-text-main uppercase tracking-widest ml-1">Categoría</label>
@@ -694,9 +798,21 @@ const Inventory = () => {
         </form>
       </Modal>
 
-      <Modal isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} title="Escanear Código">
-        <div id="reader" className="w-full h-[300px]"></div>
-      </Modal>
+      <BarcodeCameraScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(text) => {
+          const product = products.find(p => p.barcode === text);
+          if (product) {
+            handleOpenModal(product);
+            addNotification('Producto encontrado. Puedes actualizar su stock.', 'info');
+          } else {
+            handleOpenModal(null);
+            setFormData(prev => ({ ...prev, barcode: text }));
+            addNotification('Código nuevo detectado. Completa los datos.', 'success');
+          }
+        }}
+      />
 
       {showPrinter && (
         <BarcodeLabelPrinter 

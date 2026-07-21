@@ -3,6 +3,7 @@ from backend.extensions import db
 from backend.models import Sale, SaleItem, Product, Expense
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone, timedelta
 
 reports_bp = Blueprint('reports', __name__)
@@ -36,7 +37,7 @@ def get_advanced_reports():
         prev_end_date = start_date
 
     try:
-        sales_current = Sale.query.filter(Sale.date >= start_date).all()
+        sales_current = Sale.query.options(joinedload(Sale.items)).filter(Sale.date >= start_date).all()
         sales_prev = Sale.query.filter(Sale.date >= prev_start_date, Sale.date < prev_end_date).all()
         
         expenses_current = Expense.query.filter(Expense.date >= start_date).all()

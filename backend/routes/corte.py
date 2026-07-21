@@ -3,6 +3,7 @@ from backend.extensions import db
 from backend.models import Sale, Expense, CashMovement, CashRegister, User
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone
 
 corte_bp = Blueprint('corte', __name__)
@@ -20,9 +21,11 @@ def get_corte_de_caja():
         opened_at = register_entry.opened_at
         now = datetime.now(timezone.utc)
 
-        sales_shift = Sale.query.filter(Sale.date >= opened_at, Sale.date <= now).all()
-        expenses_shift = Expense.query.filter(Expense.date >= opened_at, Expense.date <= now).all()
-        movements_shift = CashMovement.query.filter(CashMovement.date >= opened_at, CashMovement.date <= now).all()
+        sales_shift = Sale.query.options(
+            joinedload(Sale.items)
+        ).filter_by(cash_register_id=register_entry.id).all()
+        expenses_shift = Expense.query.filter_by(cash_register_id=register_entry.id).all()
+        movements_shift = CashMovement.query.filter_by(cash_register_id=register_entry.id).all()
         
         total_cash_sales = sum(s.total for s in sales_shift if s.payment_method.lower() in ['cash', 'efectivo'])
         total_card_sales = sum(s.total for s in sales_shift if s.payment_method.lower() in ['card', 'tarjeta'])
@@ -140,7 +143,8 @@ def close_register():
                 type='in' if difference > 0 else 'out',
                 amount=abs(difference),
                 description=movement_desc,
-                user_id=user_obj.id if user_obj else None
+                user_id=user_obj.id if user_obj else None,
+                cash_register_id=open_register.id
             )
             db.session.add(movement)
         db.session.commit()
@@ -177,7 +181,8 @@ def add_movement():
             type=data['type'],
             amount=float(data['amount']),
             description=data.get('description', ''),
-            user_id=user_obj.id if user_obj else None
+            user_id=user_obj.id if user_obj else None,
+            cash_register_id=open_register.id
         )
         db.session.add(new_movement)
         db.session.commit()
@@ -194,8 +199,7 @@ def get_movements():
         register_entry = CashRegister.query.filter_by(status='open').first()
         if not register_entry:
             return success_response([])
-        opened_at = register_entry.opened_at
-        movements = CashMovement.query.filter(CashMovement.date >= opened_at).order_by(CashMovement.date.desc()).all()
+        movements = CashMovement.query.filter_by(cash_register_id=register_entry.id).order_by(CashMovement.date.desc()).all()
         return success_response([m.to_dict() for m in movements])
     except Exception as e:
         return error_response(str(e), 500)
@@ -205,7 +209,10 @@ def get_movements():
 def get_register_history():
     print("[GET] /register/history - Listing last 50 shifts")
     try:
-        shifts = CashRegister.query.order_by(CashRegister.id.desc()).limit(50).all()
+        shifts = CashRegister.query.options(
+            joinedload(CashRegister.opened_by),
+            joinedload(CashRegister.closed_by)
+        ).order_by(CashRegister.id.desc()).limit(50).all()
         result = []
         for r in shifts:
             diff = 0.0

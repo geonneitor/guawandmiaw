@@ -8,7 +8,7 @@ import Input from '../design-system/components/Input'
 import { useNotificationStore } from '../store/useNotificationStore'
 import { inventoryApi } from '../api/inventory'
 
-const Suppliers = () => {
+const Suppliers = ({ isTab }) => {
   const [suppliers, setSuppliers] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -94,13 +94,18 @@ const Suppliers = () => {
     )
   }, [search, suppliers])
 
+  const Wrapper = isTab ? 'div' : PageWrapper;
+
   return (
-    <PageWrapper className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <Wrapper className={isTab ? "flex flex-col gap-6" : "flex flex-col gap-6"}>
+      {!isTab && (
         <div>
-          <h1 className="text-4xl font-black text-brand uppercase tracking-tighter">Proveedores</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-brand uppercase tracking-tighter">Proveedores</h1>
           <p className="text-text-muted font-medium">Gestiona tu red de abastecimiento y compras</p>
         </div>
+      )}
+      
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <Button icon={Plus} onClick={() => handleOpenModal()}>Nuevo Proveedor</Button>
       </div>
 
@@ -194,8 +199,7 @@ const Suppliers = () => {
         <div className="p-4 bg-brand/5 rounded-2xl border border-brand/10 mb-4">
            <p className="text-xs text-brand font-bold">Esta sección permite gestionar los datos de contacto de tus proveedores.</p>
         </div>
-        {/* Placeholder for form submission as I need to update API first */}
-        <div className="space-y-4">
+        <form className="space-y-4">
            <Input label="Nombre del Proveedor" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
            <div className="grid grid-cols-2 gap-4">
               <Input label="Teléfono" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
@@ -206,9 +210,9 @@ const Suppliers = () => {
            <div className="pt-4">
               <Button className="w-full" onClick={handleSaveSupplier}>Guardar Proveedor</Button>
            </div>
-        </div>
+        </form>
       </Modal>
-    </PageWrapper>
+    </Wrapper>
   )
 }
 

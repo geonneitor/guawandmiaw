@@ -3,6 +3,7 @@ from backend.extensions import db
 from backend.models import Expense
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone
 
 expenses_bp = Blueprint('expenses', __name__)
@@ -12,7 +13,7 @@ expenses_bp = Blueprint('expenses', __name__)
 def get_expenses():
     print("[GET] /expenses - Listing all expenses")
     try:
-        expenses = Expense.query.order_by(Expense.date.desc()).all()
+        expenses = Expense.query.options(joinedload(Expense.user)).order_by(Expense.date.desc()).all()
         return success_response([e.to_dict() for e in expenses])
     except Exception as e:
         return error_response(str(e), 500)
@@ -22,11 +23,17 @@ def get_expenses():
 def add_expense():
     data = request.json
     print(f"[POST] /expenses - Adding expense: {data.get('description')}")
+    from backend.models import CashRegister
+    open_register = CashRegister.query.filter_by(status='open').first()
+    if not open_register:
+        return error_response("No se pueden registrar gastos si la caja está cerrada.", 403)
+        
     try:
         new_expense = Expense(
             description=data['description'],
             amount=float(data['amount']),
-            date=datetime.fromisoformat(data['date']) if data.get('date') else datetime.now(timezone.utc)
+            date=datetime.fromisoformat(data['date']) if data.get('date') else datetime.now(timezone.utc),
+            cash_register_id=open_register.id
         )
         db.session.add(new_expense)
         db.session.commit()

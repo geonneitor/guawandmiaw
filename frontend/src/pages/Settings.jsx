@@ -158,7 +158,7 @@ const Settings = () => {
 
   return (
     <PageWrapper className="flex flex-col gap-6">
-      <h1 className="text-4xl font-sans font-extrabold tracking-tight text-brand">Configuración</h1>
+      <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-brand">Configuración</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar de Ajustes */}

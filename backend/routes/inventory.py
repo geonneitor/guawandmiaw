@@ -56,7 +56,7 @@ def create_restock():
 
             # Update Product Stock and Cost (Average or latest)
             product.stock += qty
-            product.cost = int(round(unit_cost)) # Actualizamos al último costo
+            product.cost = round(unit_cost, 2) # Actualizamos al último costo
 
             # Log Transaction in Ledger
             transaction = InventoryTransaction(

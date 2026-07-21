@@ -57,6 +57,7 @@ def create_app(config_class=Config):
     from backend.routes import products_bp, sales_bp, corte_bp, suppliers_bp, expenses_bp, clients_bp, reports_bp, inventory_bp
     from backend.routes.auth_routes import auth_bp
     from backend.routes.settings_routes import settings_bp
+    from backend.routes.ai_assistant import ai_bp
     
     app.register_blueprint(products_bp, url_prefix='/api/v1')
     app.register_blueprint(sales_bp, url_prefix='/api/v1')
@@ -68,6 +69,7 @@ def create_app(config_class=Config):
     app.register_blueprint(reports_bp, url_prefix='/api/v1')
     app.register_blueprint(settings_bp, url_prefix='/api/v1')
     app.register_blueprint(inventory_bp, url_prefix='/api/v1')
+    app.register_blueprint(ai_bp, url_prefix='/api/v1/ai')
 
     # Global Error Handlers
     @app.errorhandler(404)

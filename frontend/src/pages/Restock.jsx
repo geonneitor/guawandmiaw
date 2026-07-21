@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PageWrapper from '../components/PageWrapper';
-import { api } from '../api/api';
+import { api } from '../api/client';
 
-const Restock = () => {
+const Restock = ({ isTab }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
@@ -80,10 +80,12 @@ const Restock = () => {
 
   const totalCost = cart.reduce((acc, curr) => acc + (curr.quantity * curr.unit_cost), 0);
 
+  const Wrapper = isTab ? 'div' : PageWrapper;
+
   return (
-    <PageWrapper className="flex gap-6 h-[calc(100vh-80px)]">
+    <Wrapper className={isTab ? "flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-140px)]" : "flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-80px)]"}>
       {/* Columna Izquierda: Búsqueda y Selección */}
-      <div className="w-1/2 flex flex-col gap-4">
+      <div className="w-full md:w-1/2 flex flex-col gap-4">
         <div className="bg-bg-panel p-6 rounded-2xl soft-shadow">
           <h2 className="text-2xl font-bold text-brand mb-4">🛒 Orden de Resurtido</h2>
           
@@ -128,7 +130,7 @@ const Restock = () => {
       </div>
 
       {/* Columna Derecha: Carrito y Check */}
-      <div className="w-1/2 bg-bg-panel p-6 rounded-2xl soft-shadow flex flex-col">
+      <div className="w-full md:w-1/2 bg-bg-panel p-6 rounded-2xl soft-shadow flex flex-col">
         <h2 className="text-xl font-bold mb-4 border-b border-border-color pb-4">Artículos a Ingresar</h2>
         
         <div className="flex-1 overflow-y-auto flex flex-col gap-3">
@@ -195,7 +197,7 @@ const Restock = () => {
           </button>
         </div>
       </div>
-    </PageWrapper>
+    </Wrapper>
   );
 };
 

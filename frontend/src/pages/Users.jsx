@@ -88,7 +88,7 @@ const Users = () => {
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-sans font-extrabold tracking-tight text-brand">Equipo de Trabajo</h1>
+          <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-brand">Equipo de Trabajo</h1>
           <p className="text-text-muted font-medium">Gestiona los accesos y perfiles de tus colaboradores</p>
         </div>
         <Button icon={UserPlus} onClick={() => handleOpenModal()}>Nuevo Usuario</Button>

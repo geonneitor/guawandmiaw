@@ -1,34 +1,28 @@
-# 🐾 GUAW & MIAW - Punto de Venta Premium
+# 🐾 GUAW & MIAW V3 - Development Environment
 
-Bienvenido al proyecto **Guaw & Miaw**. Este repositorio contiene el sistema completo de gestión de inventario y punto de venta.
+Bienvenido al repositorio central de Guaw & Miaw V3.
 
-## 🚀 Cómo Iniciar
-Para ejecutar la aplicación en tu máquina local:
+## 🚀 Cómo Iniciar en Desarrollo Local
 
-1. **Instalar Dependencias:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Ejecutar el Servidor:**
+1. **Backend (Python / Flask):**
+   Abre una terminal en la raíz y ejecuta:
    ```bash
    python run.py
    ```
-3. **Acceder:**
-   Abre tu navegador en [http://127.0.0.1:5000](http://127.0.0.1:5000)
+   *El servidor correrá en http://127.0.0.1:5000*
+
+2. **Frontend (React / Vite):**
+   Abre otra terminal, entra a la carpeta frontend y ejecuta:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   *El frontend correrá en http://localhost:5173*
 
 ---
 
-## 📂 Estructura Crítica
-- `backend/`: Lógica de Flask y Base de Datos SQLite (`guaw_miaw.db`).
-- `frontend/`: Interfaz de usuario "Zen Monochromatic".
-- `PROJECT_ARCHITECTURE.md`: **LEER PRIMERO.** Contiene las reglas de diseño y lógica de negocio.
-- `GUIA_DESPLIEGUE_PYTHONANYWHERE.md`: Instrucciones para subir a la nube.
+## 🧠 Instrucciones Obligatorias para la IA (Agentes/Asistentes)
 
-## 🧠 Instrucciones para la IA (Si eres un asistente)
-1. **Contexto:** Lee siempre `PROJECT_ARCHITECTURE.md` antes de proponer cambios.
-2. **Estética:** Mantén el diseño denso y minimalista (Style: Zen). No rompas los bordes redondeados de `12px`.
-3. **Base de Datos:** No modifiques el esquema sin crear un respaldo del archivo `.db`.
-4. **Respeto al Core:** La lógica de productos pesables (bulk) es delicada. Verifica `pos.js` antes de editar el carrito.
+> "Hola. Estamos trabajando en el proyecto Guaw & Miaw V3. Por favor, lee **`PROJECT_ARCHITECTURE.md`** antes de proponer cualquier cambio. Mi prioridad es mantener la arquitectura Fullstack (Supabase + Render + Vercel) y la estética de diseño Midnight Rose (Rosa Pastel)."
 
----
-**Última actualización:** 13 de Marzo, 2026.
+⚠️ **IMPORTANTE:** El archivo `PROJECT_ARCHITECTURE.md` es la única fuente de verdad técnica y de diseño en todo el proyecto. Si tienes dudas sobre estilos, lógica de caja, o infraestructura de base de datos, búscalas ahí.

@@ -4,8 +4,10 @@ import { AnimatePresence } from 'framer-motion'
 import Sidebar from './components/Sidebar'
 import Notifications from './components/Notifications'
 import PageWrapper from './components/PageWrapper'
+import RoleGuard from './components/RoleGuard'
 import { useUIStore } from './store/useUIStore'
 import { useAuthStore } from './store/useAuthStore'
+import AIAssistantWidget from './components/AIAssistantWidget'
 
 // Páginas
 import Login from './pages/Login'
@@ -80,42 +82,33 @@ const AppContent = () => {
       <main 
         className={`transition-all duration-300 min-h-screen pb-20 md:pb-0 print:pl-0 ${(!isLoginPage && isAuthenticated) ? (sidebarOpen ? 'md:pl-[276px]' : 'md:pl-[104px]') : ''}`}
       >
-        <div className={!isLoginPage ? "max-w-[1600px] mx-auto p-8" : ""}>
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/login" element={<Login />} />
-              
-              {/* Rutas protegidas */}
-              <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
-              <Route path="/pos"       element={isAuthenticated ? <POS /> : <Navigate to="/login" />} />
-              <Route path="/inventory" element={isAuthenticated ? <Inventory /> : <Navigate to="/login" />} />
-              <Route path="/corte"     element={isAuthenticated ? <Corte /> : <Navigate to="/login" />} />
-              <Route path="/clients"   element={isAuthenticated ? <Clients /> : <Navigate to="/login" />} />
-              <Route path="/reports"   element={isAuthenticated ? <Reports /> : <Navigate to="/login" />} />
-              <Route path="/settings"  element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
-              
-              {/* Rutas protegidas — módulos que antes redirigían a otras páginas */}
-              <Route path="/suppliers" element={isAuthenticated ? <Suppliers /> : <Navigate to="/login" />} />
-              <Route path="/sales"     element={isAuthenticated ? <Sales /> : <Navigate to="/login" />} />
-              <Route path="/expenses"  element={isAuthenticated ? <Expenses /> : <Navigate to="/login" />} />
-              <Route path="/restock"   element={isAuthenticated ? <Restock /> : <Navigate to="/login" />} />
-              <Route path="/users"     element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
-              
-              <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
-            </Routes>
-          </AnimatePresence>
+        <div className={!isLoginPage ? "max-w-[1600px] mx-auto p-4 md:p-8" : ""}>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/login" element={<Login />} />
+            
+            {/* Rutas protegidas */}
+            <Route path="/pos"       element={isAuthenticated ? <POS /> : <Navigate to="/login" />} />
+            <Route path="/corte"     element={isAuthenticated ? <Corte /> : <Navigate to="/login" />} />
+            <Route path="/settings"  element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
+            
+            <Route path="/dashboard" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Dashboard /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/inventory" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Inventory /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/clients"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Clients /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/reports"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Reports /></RoleGuard> : <Navigate to="/login" />} />
+            
+            {/* Rutas protegidas — módulos que antes redirigían a otras páginas */}
+            <Route path="/suppliers" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Suppliers /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/sales"     element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Sales /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/expenses"  element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Expenses /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/users"     element={isAuthenticated ? <RoleGuard roles={['admin']} fallback={<Navigate to="/pos" />}><Users /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/restock"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Restock /></RoleGuard> : <Navigate to="/login" />} />
+            
+            <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+          </Routes>
         </div>
       </main>
 
-      {/* Partículas de ambiente incrementadas */}
-      {!isLoginPage && (
-        <div className="print:hidden">
-          <div className="fur-particle" style={{ '--dur': '25s', top: '10%', left: '10%', width: '400px', height: '400px', opacity: 0.4 }} />
-          <div className="fur-particle" style={{ '--dur': '35s', bottom: '15%', right: '5%', width: '500px', height: '500px', opacity: 0.3 }} />
-          <div className="fur-particle" style={{ '--dur': '45s', top: '40%', right: '20%', width: '300px', height: '300px', opacity: 0.2 }} />
-          <div className="fur-particle" style={{ '--dur': '30s', bottom: '40%', left: '20%', width: '250px', height: '250px', opacity: 0.25 }} />
-        </div>
-      )}
+      {!isLoginPage && isAuthenticated && <AIAssistantWidget />}
     </div>
   )
 }

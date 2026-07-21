@@ -14,10 +14,12 @@ class Sale(db.Model):
     # FK Relationships
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=True)
+    cash_register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=True)
 
     user = db.relationship('User', foreign_keys=[user_id], backref='sales')
     cancelled_by = db.relationship('User', foreign_keys=[cancelled_by_id])
     client = db.relationship('Client', backref='sales')
+    cash_register = db.relationship('CashRegister', backref='sales')
     items = db.relationship('SaleItem', backref='sale', lazy=True, cascade="all, delete-orphan")
 
     def __init__(self, **kwargs):
@@ -37,7 +39,8 @@ class Sale(db.Model):
             'status': self.status,
             'cancelled_at': self.cancelled_at.isoformat() if self.cancelled_at else None,
             'cancelled_by_id': self.cancelled_by_id,
-            'cancellation_reason': self.cancellation_reason
+            'cancellation_reason': self.cancellation_reason,
+            'cash_register_id': self.cash_register_id
         }
 
 class SaleItem(db.Model):

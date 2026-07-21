@@ -16,7 +16,6 @@ class Product(db.Model):
     bulto_stock = db.Column(db.Integer, default=0)
     bulto_weight = db.Column(db.Float, default=0.0)
     barcode = db.Column(db.String(50), unique=True, nullable=True)
-    location = db.Column(db.String(100), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     # Foreign Keys
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
@@ -47,9 +46,9 @@ class Product(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            # Los precios/costos siempre se entregan como enteros (sin decimales)
-            'price': int(round(self.price)) if self.price is not None else 0,
-            'cost': int(round(self.cost)) if self.cost is not None else 0,
+            # Los precios/costos ahora mantienen los decimales exactos
+            'price': round(float(self.price), 2) if self.price is not None else 0.0,
+            'cost': round(float(self.cost), 2) if self.cost is not None else 0.0,
             'stock': round(float(self.stock), 3),   # stock sí permite decimales (kg)
             'min_stock': round(float(self.min_stock), 3),
             'is_bulk': self.is_bulk,
@@ -58,7 +57,6 @@ class Product(db.Model):
             'bulto_stock': self.bulto_stock,
             'bulto_weight': round(float(self.bulto_weight), 3) if self.bulto_weight else 0,
             'barcode': self.barcode,
-            'location': self.location,
             'is_active': self.is_active,
             'category_id': self.category_id,
             'category': self.category.name if self.category else 'General',
@@ -69,7 +67,7 @@ class Product(db.Model):
             'promo_active': self.promo_active,
             'promo_type': self.promo_type,
             'promo_min_quantity': self.promo_min_quantity,
-            'promo_discount': int(round(self.promo_discount)) if self.promo_discount is not None else None,
+            'promo_discount': round(float(self.promo_discount), 2) if self.promo_discount is not None else None,
             'promo_start_date': self.promo_start_date.isoformat() if self.promo_start_date else None,
             'expiry_date': self.expiry_date.isoformat() if self.expiry_date else None
         }

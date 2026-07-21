@@ -57,7 +57,7 @@ const Reports = () => {
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
-          <h1 className="text-4xl font-sans font-extrabold tracking-tight text-brand">Analítica y Reportes</h1>
+          <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-brand">Analítica y Reportes</h1>
           <p className="text-text-muted font-medium">Visualiza el crecimiento y rendimiento de tu tienda</p>
         </div>
         <div className="flex gap-2">

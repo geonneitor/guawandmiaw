@@ -46,7 +46,9 @@ class CashMovement(db.Model):
     description = db.Column(db.String(200))
     date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    cash_register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=True)
     user = db.relationship('User')
+    cash_register = db.relationship('CashRegister', backref='movements')
 
     def __init__(self, **kwargs):
         super(CashMovement, self).__init__(**kwargs)
@@ -59,7 +61,8 @@ class CashMovement(db.Model):
             'description': self.description,
             'date': self.date.isoformat() if self.date else None,
             'user_id': self.user_id,
-            'user_name': self.user.display_name if self.user else 'Desconocido'
+            'user_name': self.user.display_name if self.user else 'Desconocido',
+            'cash_register_id': self.cash_register_id
         }
 
 class Expense(db.Model):
@@ -68,7 +71,9 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    cash_register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=True)
     user = db.relationship('User')
+    cash_register = db.relationship('CashRegister', backref='expenses')
 
     def __init__(self, **kwargs):
         super(Expense, self).__init__(**kwargs)
@@ -80,5 +85,6 @@ class Expense(db.Model):
             'amount': self.amount,
             'date': self.date.isoformat() if self.date else None,
             'user_id': self.user_id,
-            'user_name': self.user.display_name if self.user else 'Desconocido'
+            'user_name': self.user.display_name if self.user else 'Desconocido',
+            'cash_register_id': self.cash_register_id
         }

@@ -6,25 +6,25 @@ Este proyecto ha sido optimizado para calidad, producción y observabilidad.
 
 1. **Backend (Flask):**
    - Asegúrate de tener el entorno virtual activo.
-   - Ejecuta: `python run.py`
+   - Ejecuta: `python run.py` (Asegúrate de NO tener procesos zombie en el puerto 5000).
    - El servidor correrá en `http://127.0.0.1:5000`.
 
-2. **Frontend (Vite):**
+2. **Frontend (Vite / React 19):**
    - Navega a `frontend/` y ejecuta: `npm run dev`.
-   - Accede a `http://localhost:5173/static/` para desarrollo con HMR y Tailwind.
+   - Accede a `http://localhost:5181/` (u otro puerto detectado). El soporte **PWA** inyecta el Service Worker localmente gracias a `devOptions`.
 
 ## 🚀 Preparación para Producción
 
-1. **Compilación de Assets:**
+1. **Compilación de Assets (Frontend):**
    - En `frontend/`, ejecuta `npm run build`.
-   - Esto generará los archivos optimizados en `frontend/static/dist`.
+   - Vercel automatiza este proceso; el sistema está preparado para autodespliegue.
 
-2. **Configuración de Seguridad:**
-   - Cambia las claves en el archivo `.env`.
-   - El sistema ya integra `Flask-Talisman` para cabeceras de seguridad.
+2. **Configuración de Backend (Render):**
+   - La API se despliega vía `render.yaml` o directamente conectando a GitHub.
+   - Variables de Entorno crudas en Render: `DATABASE_URL` (Supabase Postgres), `JWT_SECRET_KEY`.
 
-3. **Pruebas de Calidad:**
-   - Ejecuta los tests de API: `python -m unittest tests/test_api.py`.
+3. **Pruebas de Calidad y Rendimiento:**
+   - Para evaluar el DOM y Main Thread, inspeccionar en Chrome DevTools bajo estrangulamiento de CPU 4x o probar directamente el límite de `visibleCount` en `POS.jsx`.
 
 ## 📊 Logs y Diagnóstico
 

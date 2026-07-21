@@ -8,28 +8,31 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['PPFB.png'],
+      devOptions: {
+        enabled: true
+      },
       manifest: {
         name: 'Guaw & Miaw POS',
         short_name: 'Guaw & Miaw',
         description: 'Punto de Venta y Gestión de Inventario',
-        theme_color: '#C62828', // brand color
+        theme_color: '#FFB7C5', // brand color
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
           {
-            src: '/src/assets/PPFB.png',
+            src: '/PPFB.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/src/assets/PPFB.png',
+            src: '/PPFB.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/src/assets/PPFB.png',
+            src: '/PPFB.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

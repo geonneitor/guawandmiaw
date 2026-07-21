@@ -12,18 +12,22 @@ import {
   X
 } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
+import { useInventoryStore } from '../store/useInventoryStore'
 import { useNotificationStore } from '../store/useNotificationStore'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
 import Button from '../design-system/components/Button'
 import Badge from '../design-system/components/Badge'
 import AnimatedNumber from '../components/AnimatedNumber'
+import Modal from '../design-system/components/Modal'
+import Input from '../design-system/components/Input'
 import BulkSelectorModal from '../components/BulkSelectorModal'
 import { salesApi } from '../api/sales'
 import { inventoryApi } from '../api/inventory'
 import { corteApi } from '../api/corte'
 import { useAuthStore } from '../store/useAuthStore'
 import mascotaFrontal from '../assets/mascota-frontal.png'
+import BarcodeCameraScanner from '../components/BarcodeCameraScanner'
 
 const CATEGORY_ICONS = {
   'Alimentos': '🦴',
@@ -42,19 +46,34 @@ const CATEGORY_ICONS = {
 
 const POS = () => {
   const [search, setSearch] = useState('')
-  const [products, setProducts] = useState([])
-  const [categories, setCategories] = useState([])
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(40)
+  const [mobileTab, setMobileTab] = useState('catalog')
   const [registerOpen, setRegisterOpen] = useState(null)
   const [bulkModal, setBulkModal] = useState({ isOpen: false, product: null })
   const [successModal, setSuccessModal] = useState(null)
   const [processingCheckout, setProcessingCheckout] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [showCashModal, setShowCashModal] = useState(false)
+  const [cashTendered, setCashTendered] = useState('')
+  const [isSearchScannerOpen, setIsSearchScannerOpen] = useState(false)
+  const [isDirectScannerOpen, setIsDirectScannerOpen] = useState(false)
   
   const { items, addItem, removeItem, updateQuantity, getTotal, clear, paymentMethod, setPaymentMethod } = useCartStore()
   const { addNotification } = useNotificationStore()
   const { user } = useAuthStore()
+
+  const { products, categories, loadingProducts, fetchProducts } = useInventoryStore()
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    setVisibleCount(40)
+  }, [debouncedSearch, selectedCategory])
 
   useEffect(() => {
     fetchProducts()
@@ -74,30 +93,15 @@ const POS = () => {
     }
   }
 
-  const fetchProducts = async () => {
-    setLoadingProducts(true)
-    try {
-      const res = await inventoryApi.getProducts()
-      if (res.success) {
-        setProducts(res.data)
-        const cats = ['Todos', ...new Set(res.data.map(p => p.category || 'General').filter(Boolean))]
-        setCategories(cats)
-      }
-    } catch (err) {
-      addNotification('Error al cargar productos', 'error')
-    } finally {
-      setLoadingProducts(false)
-    }
-  }
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-        (p.barcode && p.barcode.includes(search))
+      const matchesSearch = p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+        (p.barcode && p.barcode.includes(debouncedSearch))
       const matchesCategory = selectedCategory === 'Todos' || (p.category || 'General') === selectedCategory
       return matchesSearch && matchesCategory
     })
-  }, [search, selectedCategory, products])
+  }, [debouncedSearch, selectedCategory, products])
 
   const handleAddToCart = (product) => {
     const totalStock = product.is_bulk ? (product.stock || 0) + ((product.bulto_stock || 0) * (product.bulto_weight || 0)) : product.stock;
@@ -149,7 +153,7 @@ const POS = () => {
         setSuccessModal({ folio, total: roundedTotal, method: paymentMethod })
         setCountdown(3)
         clear()
-        fetchProducts()
+        fetchProducts(true)
       } else {
         addNotification(res.error || 'Error al procesar venta', 'error')
       }
@@ -176,11 +180,32 @@ const POS = () => {
   const paymentLabel = { cash: 'Efectivo', card: 'Tarjeta', transfer: 'Transferencia' }
 
   return (
-    <PageWrapper className="h-[calc(100vh-120px)] flex flex-col">
+    <PageWrapper className="h-[calc(100vh-120px)] md:h-[calc(100vh-64px)] flex flex-col">
+      {/* Mobile Tab Switcher */}
+      <div className="lg:hidden flex bg-bg-card/50 backdrop-blur-sm p-1.5 rounded-[1.5rem] border border-border-subtle shadow-sm mb-4 shrink-0">
+        <button 
+          onClick={() => setMobileTab('catalog')}
+          className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${mobileTab === 'catalog' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+        >
+          Catálogo
+        </button>
+        <button 
+          onClick={() => setMobileTab('cart')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${mobileTab === 'cart' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+        >
+          Carrito
+          {items.length > 0 && (
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${mobileTab === 'cart' ? 'bg-white text-[#C62828]' : 'bg-[#C62828] text-white'}`}>
+              {items.length}
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
         
         {/* COLUMNA IZQUIERDA: BUSCADOR Y CATÁLOGO */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className={`flex-1 flex flex-col gap-4 overflow-hidden ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
           <Card className="p-4" padding="p-4">
             <div className="flex flex-col gap-3">
               <div className="relative">
@@ -190,9 +215,16 @@ const POS = () => {
                   placeholder="Buscar por nombre o código de barras..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-bg-main border-none rounded-2xl focus:ring-2 focus:ring-[#C62828]/30 outline-none font-bold text-lg transition-all"
+                  className="w-full pl-12 pr-12 py-3 bg-bg-main border-none rounded-2xl focus:ring-2 focus:ring-[#C62828]/30 outline-none font-bold text-lg transition-all"
                   autoFocus
                 />
+                <button 
+                  onClick={() => setIsSearchScannerOpen(true)} 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-brand hover:text-brand-light transition-colors" 
+                  title="Escanear para buscar"
+                >
+                  📷
+                </button>
               </div>
               {/* Filtros de categoría */}
               {categories.length > 1 && (
@@ -228,21 +260,17 @@ const POS = () => {
                 <div className="w-8 h-8 border-4 border-brand/20 border-t-brand rounded-full animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-                <AnimatePresence>
-                  {filteredProducts.map((product) => (
-                    <motion.button
-                      layout
-                      key={product.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleAddToCart(product)}
-                      className="group relative flex flex-col bg-bg-card p-4 rounded-3xl soft-shadow border-2 border-transparent hover:border-brand/30 hover:bg-brand/5 transition-all text-left overflow-hidden"
-                    >
-                      <div 
-                        className="relative z-10 mb-3 w-full aspect-square rounded-2xl flex items-center justify-center transition-colors group-hover:scale-[1.02] duration-300 bg-brand/10 dark:bg-brand/20"
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                    {filteredProducts.slice(0, visibleCount).map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleAddToCart(product)}
+                        className="group relative flex flex-col bg-bg-card p-4 rounded-3xl soft-shadow border-2 border-transparent hover:border-brand/30 hover:bg-brand/5 transition-all text-left overflow-hidden active:scale-95 duration-200"
                       >
+                        <div 
+                          className="relative z-10 mb-3 w-full aspect-square rounded-2xl flex items-center justify-center transition-colors group-hover:scale-[1.02] duration-300 bg-brand/10 dark:bg-brand/20"
+                        >
                         <span className="text-4xl group-hover:scale-110 transition-transform duration-300">
                           {CATEGORY_ICONS[product.category] || CATEGORY_ICONS['General']}
                         </span>
@@ -264,16 +292,24 @@ const POS = () => {
                           <Badge variant="error">Sin Stock</Badge>
                         </div>
                       )}
-                    </motion.button>
-                  ))}
-                </AnimatePresence>
-                
-                {filteredProducts.length === 0 && !loadingProducts && (
-                  <div className="col-span-full py-20 flex flex-col items-center text-text-muted">
-                    <PackageSearch size={64} strokeWidth={1} className="mb-4 opacity-20" />
-                    <p className="text-xl font-bold">No se encontraron productos</p>
-                    <p className="text-sm mt-1 opacity-60">Intenta con otro término o categoría</p>
-                  </div>
+                    </button>
+                    ))}
+                  
+                  {filteredProducts.length === 0 && !loadingProducts && (
+                    <div className="col-span-full py-20 flex flex-col items-center text-text-muted">
+                      <PackageSearch size={64} strokeWidth={1} className="mb-4 opacity-20" />
+                      <p className="text-xl font-bold">No se encontraron productos</p>
+                      <p className="text-sm mt-1 opacity-60">Intenta con otro término o categoría</p>
+                    </div>
+                  )}
+                </div>
+                {visibleCount < filteredProducts.length && (
+                  <button 
+                    onClick={() => setVisibleCount(v => v + 40)}
+                    className="w-full py-3 mb-6 bg-brand/10 text-brand font-bold rounded-2xl hover:bg-brand/20 transition-colors"
+                  >
+                    Mostrar más productos ({filteredProducts.length - visibleCount} restantes)
+                  </button>
                 )}
               </div>
             )}
@@ -281,7 +317,7 @@ const POS = () => {
         </div>
 
         {/* COLUMNA DERECHA: CARRITO Y COBRO */}
-        <Card className="w-full lg:w-[480px] flex flex-col overflow-hidden relative shadow-2xl" padding="p-0">
+        <Card className={`w-full lg:w-[480px] flex flex-col overflow-hidden relative shadow-2xl ${mobileTab === 'catalog' ? 'hidden lg:flex' : 'flex'}`} padding="p-0">
           <div 
             className="p-6 border-b-2 border-dashed flex items-center justify-between relative overflow-hidden bg-brand/5 border-brand/20"
           >
@@ -300,16 +336,27 @@ const POS = () => {
             <img 
               src={mascotaFrontal} 
               alt="Mascota" 
-              className="absolute right-12 bottom-0 w-24 h-24 object-contain translate-y-2 opacity-90 z-0"
+              className="absolute right-32 bottom-0 w-24 h-24 object-contain translate-y-2 opacity-90 z-0"
             />
 
-            <button 
-              onClick={clear}
-              className="p-2 text-text-muted transition-colors hover:text-[#C62828] relative z-10 bg-white/50 hover:bg-white rounded-full backdrop-blur-sm"
-              title="Limpiar carrito"
-            >
-              <Trash2 size={20} />
-            </button>
+            <div className="flex items-center gap-2 relative z-10">
+              <button 
+                onClick={() => setIsDirectScannerOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-brand text-white rounded-xl font-bold shadow-md hover:bg-brand-light transition-all"
+                title="Escanear y Agregar al Carrito"
+              >
+                <span className="text-xl">📷</span>
+                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Venta Rápida</span>
+              </button>
+
+              <button 
+                onClick={clear}
+                className="p-2 text-text-muted transition-colors hover:text-[#C62828] bg-white/50 hover:bg-white rounded-full backdrop-blur-sm"
+                title="Limpiar carrito"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-gradient-to-b from-brand/20 via-brand/5 to-transparent" style={{ boxShadow: 'inset 0 0 40px rgba(var(--brand-rgb), 0.15)' }}>
@@ -420,7 +467,14 @@ const POS = () => {
                   : (items.length > 0 ? 'bg-brand text-white shadow-lg shadow-brand/40' : 'bg-bg-main text-text-muted border border-border-subtle')
               }`}
               disabled={items.length === 0 || processingCheckout || registerOpen === false}
-              onClick={handleCheckout}
+              onClick={() => {
+                if (paymentMethod === 'cash' || paymentMethod === 'efectivo') {
+                  setCashTendered('')
+                  setShowCashModal(true)
+                } else {
+                  handleCheckout()
+                }
+              }}
               icon={registerOpen === false ? Lock : CheckCircle2}
             >
               {processingCheckout ? 'Procesando...' : registerOpen === false ? 'Caja Cerrada' : 'Confirmar Venta'}
@@ -428,6 +482,55 @@ const POS = () => {
           </div>
         </Card>
       </div>
+
+      <Modal isOpen={showCashModal} onClose={() => setShowCashModal(false)} title="Calculadora de Cambio">
+        <div className="space-y-6 py-2">
+          <div className="p-4 bg-bg-main rounded-2xl border border-border-subtle text-center">
+            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Total a Cobrar</p>
+            <p className="text-3xl font-black text-brand">${getTotal().toFixed(2)}</p>
+          </div>
+          <Input 
+            label="Efectivo Recibido ($)" 
+            type="number" 
+            placeholder="0.00"
+            value={cashTendered}
+            onChange={(e) => setCashTendered(e.target.value)}
+            className="text-2xl font-black text-center"
+            autoFocus
+          />
+          
+          <div className="flex gap-2">
+            {[50, 100, 200, 500, 1000].map(val => (
+              <button 
+                key={val} 
+                onClick={() => setCashTendered(val.toString())}
+                className="flex-1 py-2 bg-brand/10 text-brand rounded-xl font-bold hover:bg-brand hover:text-white transition-colors"
+              >
+                ${val}
+              </button>
+            ))}
+          </div>
+
+          <div className={`p-4 rounded-2xl border text-center ${parseFloat(cashTendered) >= getTotal() ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-1">Cambio a Entregar</p>
+            <p className="text-3xl font-black">
+              {parseFloat(cashTendered) >= getTotal() ? `$${(parseFloat(cashTendered) - getTotal()).toFixed(2)}` : '—'}
+            </p>
+          </div>
+
+          <Button 
+            className="w-full py-4 text-lg" 
+            icon={CheckCircle2} 
+            disabled={!cashTendered || parseFloat(cashTendered) < getTotal() || processingCheckout}
+            onClick={() => {
+              setShowCashModal(false)
+              handleCheckout()
+            }}
+          >
+            Confirmar y Cobrar
+          </Button>
+        </div>
+      </Modal>
 
       <BulkSelectorModal 
         isOpen={bulkModal.isOpen} 
@@ -492,6 +595,29 @@ const POS = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <BarcodeCameraScanner 
+        isOpen={isSearchScannerOpen}
+        onClose={() => setIsSearchScannerOpen(false)}
+        title="Escáner de Búsqueda"
+        onScan={(text) => {
+          setSearch(text)
+        }}
+      />
+
+      <BarcodeCameraScanner 
+        isOpen={isDirectScannerOpen}
+        onClose={() => setIsDirectScannerOpen(false)}
+        title="Escanear y Agregar"
+        onScan={(text) => {
+          const product = products.find(p => p.barcode === text)
+          if (product) {
+            handleAddToCart(product)
+          } else {
+            addNotification(`Producto no encontrado (${text})`, 'error')
+          }
+        }}
+      />
     </PageWrapper>
   )
 }

@@ -1,9 +1,14 @@
 import React, { useRef } from 'react';
-import ReactToPrint from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import Barcode from 'react-barcode';
 
 const BarcodeLabelPrinter = ({ products = [], onClose }) => {
   const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    pageStyle: "@page { size: auto; margin: 5mm; }"
+  });
 
   if (!products || products.length === 0) return null;
 
@@ -63,15 +68,9 @@ const BarcodeLabelPrinter = ({ products = [], onClose }) => {
           <button onClick={onClose} className="px-4 py-2 rounded-xl text-text-main hover:bg-bg-main transition-colors">
             Cancelar
           </button>
-          <ReactToPrint
-            trigger={() => (
-              <button className="px-6 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-light transition-colors soft-shadow">
-                Imprimir {products.length} {products.length === 1 ? 'Etiqueta' : 'Etiquetas'}
-              </button>
-            )}
-            content={() => componentRef.current}
-            pageStyle="@page { size: auto; margin: 5mm; }"
-          />
+          <button onClick={handlePrint} className="px-6 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-light transition-colors soft-shadow">
+            Imprimir {products.length} {products.length === 1 ? 'Etiqueta' : 'Etiquetas'}
+          </button>
         </div>
       </div>
     </div>

@@ -203,7 +203,7 @@ const Finanzas = () => {
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
           />
           <div className="pb-2">
-            <h1 className="text-4xl font-sans font-extrabold tracking-tight text-brand">Finanzas</h1>
+            <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-brand">Finanzas</h1>
             <p className="text-text-muted font-medium">Caja, historial de ventas y movimientos</p>
           </div>
         </div>
@@ -602,12 +602,21 @@ const Finanzas = () => {
                         corte?.expenses_details.map((exp, i) => (
                           <div key={i} className="flex items-center justify-between p-3 bg-bg-main rounded-xl border border-border-subtle">
                             <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${exp.type === 'expense' ? 'bg-amber-50 text-amber-500' : exp.type === 'movement_in' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
-                                {exp.type === 'movement_in' ? <ArrowUpCircle size={14} /> : <TrendingDown size={14} />}
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                exp.type === 'expense' ? 'bg-amber-50 text-amber-500' : 
+                                exp.description?.includes('Ajuste al Cierre') ? 'bg-orange-100 text-orange-600' :
+                                exp.type === 'movement_in' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
+                              }`}>
+                                {exp.description?.includes('Ajuste al Cierre') ? <AlertTriangle size={14} /> : 
+                                 exp.type === 'movement_in' ? <ArrowUpCircle size={14} /> : <TrendingDown size={14} />}
                               </div>
                               <div>
                                 <p className="text-xs font-bold text-text-main line-clamp-1">{exp.description}</p>
-                                <p className="text-[9px] text-text-muted font-bold">{exp.time} • {exp.type === 'expense' ? 'GASTO' : exp.type === 'movement_in' ? 'ENTRADA' : 'SALIDA'}</p>
+                                <p className="text-[9px] text-text-muted font-bold">{exp.time} • {
+                                  exp.type === 'expense' ? 'GASTO' : 
+                                  exp.description?.includes('Ajuste al Cierre') ? 'AJUSTE DE CAJA' :
+                                  exp.type === 'movement_in' ? 'ENTRADA' : 'SALIDA'
+                                }</p>
                               </div>
                             </div>
                             <span className={`font-black ${exp.type === 'movement_in' ? 'text-green-600' : 'text-red-500'}`}>
