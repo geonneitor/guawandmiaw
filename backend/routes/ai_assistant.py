@@ -29,7 +29,7 @@ def chat():
         low_stock_names = [f"{p.name} ({p.stock})" for p in low_stock_products[:15]]
         
         today = datetime.today().date()
-        todays_sales = db.session.query(func.sum(Sale.total)).filter(func.date(Sale.created_at) == today).scalar() or 0
+        todays_sales = db.session.query(func.sum(Sale.total)).filter(func.date(Sale.date) == today).scalar() or 0
         
         corte_abierto = CashRegister.query.filter_by(status='OPEN').first()
         
