@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Mic, MicOff, Sparkles, Zap } from 'lucide-react';
 import mascotaFrontal from '../assets/mascota-frontal.png';
 import { aiApi } from '../api/ai';
-
+import { useCartStore } from '../store/useCartStore';
+import { useNotificationStore } from '../store/useNotificationStore';
+import { useNavigate } from 'react-router-dom';
 // ─── Constantes de personalidad ──────────────────────────────────────────────
 const FIGARO_SKIN = {
   id: 'figaro',
@@ -76,6 +78,7 @@ const AIAssistantWidget = () => {
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const navigate = useNavigate();
 
   // ── Scroll al fondo ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -96,14 +99,45 @@ const AIAssistantWidget = () => {
     if (!text || isLoading) return;
 
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text }]);
+    const newMessages = [...messages, { role: 'user', text }];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      const response = await aiApi.sendMessage(text);
+      // Filtrar el saludo inicial si es necesario o simplemente mapear
+      const apiMessages = newMessages.map(m => ({
+        role: m.role,
+        content: m.text
+      }));
+      
+      const response = await aiApi.sendMessage(apiMessages);
+      
       const reply = response?.data?.reply ?? response?.reply ?? null;
       if (response?.success && reply) {
         setMessages(prev => [...prev, { role: 'assistant', text: String(reply) }]);
+        
+        // Manejar acciones del Agente
+        const actions = response?.data?.actions ?? response?.actions ?? [];
+        actions.forEach(action => {
+          if (action.type === 'ADD_TO_CART' && action.product) {
+            useCartStore.getState().addItem(action.product, action.quantity || 1);
+            
+            // Notificación interactiva
+            useNotificationStore.getState().addNotification(
+              <div className="flex items-center gap-3">
+                <div>Se agregó <strong>{action.product.name}</strong> al carrito.</div>
+                <button 
+                  onClick={() => navigate('/pos')}
+                  className="bg-brand text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-brand-light"
+                >
+                  Ver Carrito
+                </button>
+              </div>,
+              'success'
+            );
+          }
+        });
+
       } else {
         const errMsg = response?.error || 'Algo salió mal.';
         setMessages(prev => [...prev, { role: 'assistant', text: `Ups: ${errMsg}` }]);

@@ -1,7 +1,7 @@
 import { api } from './client';
 
 export const aiApi = {
-  sendMessage: async (prompt) => {
-    return await api.post('/ai/chat', { prompt });
+  sendMessage: async (messages) => {
+    return await api.post('/ai/chat', { messages });
   }
 };
