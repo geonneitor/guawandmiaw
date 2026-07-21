@@ -1,12 +1,11 @@
 import os
-import google.generativeai as genai
+from groq import Groq
 from flask import Blueprint, request
 from backend.extensions import db
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
-from backend.models import Product, Sale, CashRegister
 from datetime import datetime
-from sqlalchemy import func, text
+from sqlalchemy import text
 
 ai_bp = Blueprint('ai', __name__)
 
@@ -17,12 +16,12 @@ def chat():
     prompt = data.get('prompt')
     if not prompt:
         return error_response("Prompt is required", 400)
-    
-    api_key = os.environ.get('GEMINI_API_KEY')
+
+    api_key = os.environ.get('GROQ_API_KEY')
     if not api_key:
-        return error_response("GEMINI_API_KEY no está configurada en el servidor", 500)
-    
-    # ── Paso 1: Contexto de DB (con fallbacks para no romper si falta una columna) ──
+        return error_response("GROQ_API_KEY no está configurada en el servidor", 500)
+
+    # ── Contexto de la tienda desde la DB (con fallbacks) ─────────────────────
     try:
         total_products = db.session.execute(text("SELECT COUNT(*) FROM product")).scalar() or 0
     except Exception:
@@ -54,28 +53,30 @@ def chat():
     except Exception:
         corte_abierto = False
 
-    context_string = f"""
-    Eres 'Fígaro', el asistente inteligente integrado de 'Guaw & Miaw', una boutique premium de mascotas.
-    Eres un gato negro con blanco. Tienes personalidad felina pero muy profesional y servicial.
-    Responde siempre en formato Markdown, de forma amable, profesional, concisa y directa.
-    Aquí tienes el contexto actual de la base de datos (tiempo real) de la tienda:
-    - Fecha de hoy: {today}
-    - Total de productos en inventario: {total_products}
-    - Ventas totales del día de hoy: ${float(todays_sales):,.2f}
-    - ¿Caja Registradora Abierta?: {"Sí" if corte_abierto else "No"}
-    - Alertas de Stock Bajo (Primeros 15): {', '.join(low_stock_names) if low_stock_names else 'Todo bien, no hay stock bajo.'}
-    
-    Pregunta del usuario a continuación.
-    """
+    system_prompt = f"""Eres 'Fígaro', el asistente inteligente integrado de 'Guaw & Miaw', una boutique premium de mascotas.
+Eres un gato negro con blanco. Tienes personalidad felina pero muy profesional y servicial.
+Responde siempre en formato Markdown, de forma amable, profesional, concisa y directa.
+Aquí tienes el contexto actual de la base de datos (tiempo real) de la tienda:
+- Fecha de hoy: {today}
+- Total de productos en inventario: {total_products}
+- Ventas totales del día de hoy: ${float(todays_sales):,.2f}
+- ¿Caja Registradora Abierta?: {"Sí" if corte_abierto else "No"}
+- Alertas de Stock Bajo (Primeros 15): {', '.join(low_stock_names) if low_stock_names else 'Todo bien, no hay stock bajo.'}"""
 
-    # ── Paso 2: Llamar a Gemini ──────────────────────────────────────────────
+    # ── Llamar a Groq ─────────────────────────────────────────────────────────
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-lite')
-        response = model.generate_content(
-            context_string + "\n\nUsuario: " + prompt
+        client = Groq(api_key=api_key)
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": prompt}
+            ],
+            max_tokens=1024,
+            temperature=0.7,
         )
-        return success_response({"reply": response.text})
+        reply = completion.choices[0].message.content
+        return success_response({"reply": reply})
     except Exception as e:
-        print(f"[ERROR] Gemini API: {str(e)}")
+        print(f"[ERROR] Groq API: {str(e)}")
         return error_response(f"Error procesando IA: {str(e)}", 500)
