@@ -49,7 +49,7 @@ def chat():
 
         # 2. Llamar a Gemini
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         
         response = model.generate_content([
             {"role": "user", "parts": [context_string + "\n\nUsuario: " + prompt]}
