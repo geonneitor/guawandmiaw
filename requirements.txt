@@ -14,3 +14,4 @@ Werkzeug==3.1.6
 flask-talisman==1.1.0
 gunicorn==21.2.0
 groq==0.9.0
+httpx<0.28.0
