@@ -336,7 +336,7 @@ const POS = () => {
             <img 
               src={mascotaFrontal} 
               alt="Mascota" 
-              className="absolute right-32 bottom-0 w-24 h-24 object-contain translate-y-2 opacity-90 z-0"
+              className="absolute left-1/2 -translate-x-1/2 bottom-0 w-20 h-20 object-contain translate-y-2 opacity-80 z-0 pointer-events-none"
             />
 
             <div className="flex items-center gap-2 relative z-10">

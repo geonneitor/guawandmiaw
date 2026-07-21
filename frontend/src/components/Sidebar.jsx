@@ -28,6 +28,7 @@ import Avatar from './Avatar'
 import croquetaCorazon from '../assets/croqueta-corazon.png'
 import croquetaPescado from '../assets/croqueta-pescado.png'
 import croquetaFlor from '../assets/croqueta-flor.png'
+import logoImg from '../assets/logo.png'
 
 const FloatingCroquetas = ({ visible }) => {
   const snacks = [
@@ -189,7 +190,7 @@ const Sidebar = () => {
             className="flex items-center gap-3"
           >
             <div className="w-10 h-10 overflow-hidden flex items-center justify-center bg-white rounded-full p-1 shadow-sm border border-brand-light">
-              <img src="/src/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-display font-black text-brand text-lg leading-none tracking-tighter">GUAW & MIAW</span>
@@ -198,7 +199,7 @@ const Sidebar = () => {
           </motion.div>
         ) : (
           <div className="w-10 h-10 overflow-hidden flex items-center justify-center bg-white rounded-full p-1 shadow-sm border border-brand-light mx-auto">
-            <img src="/src/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
           </div>
         )}
         
