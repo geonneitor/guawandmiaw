@@ -89,27 +89,42 @@ def chat():
     try:
         total_products = db.session.execute(text("SELECT COUNT(*) FROM product")).scalar() or 0
         today = datetime.today().date()
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
         todays_sales = db.session.execute(text("SELECT COALESCE(SUM(total), 0) FROM sale WHERE DATE(date) = :t"), {"t": today}).scalar() or 0
+        
+        top_product = db.session.execute(text("""
+            SELECT p.name 
+            FROM sale_item si 
+            JOIN product p ON si.product_id = p.id 
+            JOIN sale s ON si.sale_id = s.id 
+            WHERE DATE(s.date) = :t 
+            GROUP BY p.id 
+            ORDER BY SUM(si.quantity) DESC LIMIT 1
+        """), {"t": today}).scalar() or "Aún no hay ventas"
+        
         caja_open = db.session.execute(text("SELECT COUNT(*) FROM cash_register WHERE status = 'open'")).scalar() or 0
         corte_abierto = caja_open > 0
     except Exception:
         total_products = "N/A"
         today = datetime.today().date()
+        current_time = "Desconocida"
         todays_sales = 0
+        top_product = "N/A"
         corte_abierto = False
 
     system_prompt = f"""Eres 'Fígaro', el asistente inteligente integrado de 'Guaw & Miaw', una boutique premium de mascotas.
 Eres un gato negro con blanco. Tienes personalidad felina pero profesional.
 
-REGLAS ESTRICTAS (GUARDRAILS):
-1. Eres EXCLUSIVAMENTE el asistente de 'Guaw & Miaw'. NO debes responder NINGUNA pregunta que no esté relacionada con mascotas, inventario, ventas, cortes de caja o la tienda.
-2. Si el usuario te pregunta cosas generales (matemáticas, historia, código, etc.), debes negarte amablemente diciendo que solo sabes administrar la tienda como buen michi. ¡NUNCA resuelvas ecuaciones ni alucines!
+REGLAS FLEXIBLES (Puedes ayudar en más cosas):
+1. Eres el asistente de 'Guaw & Miaw', pero AHORA TIENES PERMISO para contestar preguntas de ayuda general como: el clima, la hora actual, resolver cálculos matemáticos, revisar calendarios, etc.
+2. Si te preguntan operaciones matemáticas (calculadora), resuélvelas directamente. 
 3. Si te piden agregar algo al carrito, PRIMERO usa 'check_inventory' para buscar el producto y su ID. Luego usa 'add_to_cart' indicando el ID y cantidad.
 4. Si te piden abrir caja, PREGUNTA PRIMERO con cuánto efectivo exactamente, y luego usa 'open_cash_register'.
 
-Contexto de la tienda hoy ({today}):
+Contexto actual de la tienda ({current_time}):
 - Productos en inventario: {total_products}
 - Ventas totales hoy: ${float(todays_sales):,.2f}
+- Producto más vendido hoy: {top_product}
 - ¿Caja Abierta?: {"Sí" if corte_abierto else "No"}"""
 
     messages = [{"role": "system", "content": system_prompt}] + frontend_messages
