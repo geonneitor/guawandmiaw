@@ -14,8 +14,10 @@ import {
   ChevronRight,
   Upload,
   Download,
-  X
+  X,
+  BellOff
 } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
 import Button from '../design-system/components/Button'
@@ -32,6 +34,10 @@ import BarcodeLabelPrinter from '../components/BarcodeLabelPrinter'
 import BarcodeCameraScanner from '../components/BarcodeCameraScanner'
 
 const Inventory = () => {
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const filterQuery = searchParams.get('filter')
+
   const [activeTab, setActiveTab] = useState('products')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -69,7 +75,8 @@ const Inventory = () => {
     promo_min_quantity: '',
     promo_discount: '',
     promo_start_date: '',
-    expiry_date: ''
+    expiry_date: '',
+    ignore_stock_alerts: false
   })
 
   const { addNotification } = useNotificationStore()
@@ -136,7 +143,8 @@ const Inventory = () => {
         promo_min_quantity: product.promo_min_quantity || '',
         promo_discount: product.promo_discount || '',
         promo_start_date: product.promo_start_date ? product.promo_start_date.split('T')[0] : '',
-        expiry_date: product.expiry_date ? product.expiry_date.split('T')[0] : ''
+        expiry_date: product.expiry_date ? product.expiry_date.split('T')[0] : '',
+        ignore_stock_alerts: product.ignore_stock_alerts || false
       })
     } else {
       setEditingProduct(null)
@@ -144,7 +152,8 @@ const Inventory = () => {
         name: '', price: '', cost: '', stock: '', min_stock: '',
         is_bulk: false, unit: 'ud', bulto_stock: 0, bulto_weight: 0,
         barcode: '', category: categories.filter(c => c !== 'Todos')[0] || 'General',
-        promo_active: false, promo_type: 'bundle', promo_min_quantity: '', promo_discount: '', promo_start_date: '', expiry_date: ''
+        promo_active: false, promo_type: 'bundle', promo_min_quantity: '', promo_discount: '', promo_start_date: '', expiry_date: '',
+        ignore_stock_alerts: false
       })
     }
     setIsAddingCategory(false)
@@ -208,12 +217,15 @@ const Inventory = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
+      if (filterQuery === 'critical' && (p.stock > (p.min_stock || 0) || p.ignore_stock_alerts)) {
+        return false;
+      }
       const matchesSearch = p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
         (p.barcode && p.barcode.includes(debouncedSearch))
       const matchesCategory = selectedCategory === 'Todos' || (p.category || 'General') === selectedCategory
       return matchesSearch && matchesCategory
     })
-  }, [debouncedSearch, selectedCategory, products])
+  }, [debouncedSearch, selectedCategory, products, filterQuery])
 
   return (
     <PageWrapper className="flex flex-col gap-6">
@@ -667,7 +679,20 @@ const Inventory = () => {
             <Input label={formData.is_bulk ? "Costo (por Kg)" : "Costo"} type="number" step="0.01" value={formData.cost} onChange={(e) => setFormData({...formData, cost: e.target.value})} />
             
             <Input label={formData.is_bulk ? "Stock Actual (Kg)" : "Stock Actual"} type="number" step="0.001" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} required />
-            <Input label={formData.is_bulk ? "Stock Mínimo (Kg)" : "Stock Mínimo"} type="number" step="0.001" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} />
+            
+            <div className="flex flex-col gap-1">
+              <Input label={formData.is_bulk ? "Stock Mínimo (Kg)" : "Stock Mínimo"} type="number" step="0.001" value={formData.min_stock} onChange={(e) => setFormData({...formData, min_stock: e.target.value})} />
+              <label className="flex items-center gap-2 mt-2 cursor-pointer bg-brand/5 p-2 rounded-xl border border-brand/10 w-fit">
+                <BellOff size={16} className="text-brand" />
+                <span className="text-xs font-bold text-text-main">Ignorar Alertas de Stock Faltante (No urge surtir)</span>
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 accent-brand ml-2"
+                  checked={formData.ignore_stock_alerts}
+                  onChange={(e) => setFormData({...formData, ignore_stock_alerts: e.target.checked})}
+                />
+              </label>
+            </div>
 
             {formData.is_bulk && (
               <motion.div 

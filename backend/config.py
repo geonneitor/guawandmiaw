@@ -11,8 +11,6 @@ class Config:
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     db_path = os.path.join(BASE_DIR, 'guaw_miaw.db').replace('\\', '/')
-    if not db_path.startswith('/'):
-        db_path = '/' + db_path
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{db_path}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

@@ -1,12 +1,13 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class PurchaseOrder(db.Model):
     __tablename__ = 'purchase_order'
     
     id = db.Column(db.Integer, primary_key=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=False)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    date = db.Column(db.DateTime, default=lambda: get_local_now(), nullable=False)
     status = db.Column(db.String(20), default='COMPLETED') # PENDING, COMPLETED
     total_cost = db.Column(db.Float, default=0.0)
     notes = db.Column(db.Text, nullable=True)

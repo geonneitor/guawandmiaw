@@ -1,9 +1,10 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    date = db.Column(db.DateTime, default=lambda: get_local_now())
     total = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(20), default='cash') # cash, card, transfer
     status = db.Column(db.String(20), default='completed') # completed, cancelled

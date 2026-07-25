@@ -5,6 +5,7 @@ from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone, timedelta
+from backend.utils.timezone import get_local_now, get_local_date
 
 sales_bp = Blueprint('sales', __name__)
 
@@ -143,7 +144,7 @@ def create_sale():
 def get_stats():
     print("[GET] /stats - Calculating dashboard metrics")
     try:
-        today = datetime.now(timezone.utc).date()
+        today = get_local_date()
         start_of_today = datetime.combine(today, datetime.min.time())
         # Solo incluir ventas completadas
         sales_today = Sale.query.options(
@@ -180,10 +181,13 @@ def get_stats():
             top = max(product_today.values(), key=lambda x: x['total'])
             top_product_today = top
 
-        last_week = datetime.now(timezone.utc) - timedelta(days=7)
+        last_week = get_local_now() - timedelta(days=7)
         low_stock_products = []
         try:
-            low = Product.query.filter(Product.stock <= Product.min_stock).order_by(Product.stock.asc()).limit(10).all()
+            low = Product.query.filter(
+                Product.stock <= Product.min_stock,
+                Product.ignore_stock_alerts == False
+            ).order_by(Product.stock.asc()).limit(10).all()
             for p in low:
                 low_stock_products.append({
                     'name': p.name, 
@@ -232,7 +236,7 @@ def delete_sale(sale_id):
         
         # Marcar como cancelada
         sale.status = 'cancelled'
-        sale.cancelled_at = datetime.now(timezone.utc)
+        sale.cancelled_at = get_local_now()
         
         data = request.json or {}
         reason = data.get('reason', 'Cancelación por el administrador')

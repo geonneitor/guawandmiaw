@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { 
   TrendingUp, 
   Users, 
@@ -36,30 +37,74 @@ import { salesApi } from '../api/sales'
 
 import mascotaPose1 from '../assets/mascota-pose-1.png'
 
-// --- WIDGET COMPONENTS ---
+const StatsWidget = ({ stats, onIgnoreAlert }) => {
+  const [showLowStock, setShowLowStock] = useState(false)
 
-const StatsWidget = ({ stats }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-    {[
-      { label: 'Ventas Hoy', value: stats?.daily_total || 0, icon: TrendingUp, bg: 'bg-[#FFF0F0]', color: 'text-[#C62828]' },
-      { label: 'Transacciones', value: stats?.transaction_count || 0, icon: Clock, bg: 'bg-[#F4BFBF]/30', color: 'text-[#C62828]' },
-      { label: 'Alertas Stock', value: stats?.low_stock_products?.length || 0, icon: AlertTriangle, bg: 'bg-amber-50', color: 'text-amber-600' },
-    ].map((stat, i) => (
-      <Card key={i} className="flex items-center gap-4 p-6 border border-brand-light/30 shadow-lg shadow-brand/5" hover>
-        <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
-          <stat.icon size={26} strokeWidth={2.5} />
-        </div>
-        <div>
-          <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{stat.label}</p>
-          <p className="text-2xl font-black text-text-main leading-none">
-            {stat.label.includes('Ventas') || stat.label.includes('Ticket') ? '$' : ''}
-            <AnimatedNumber value={stat.value} />
-          </p>
-        </div>
-      </Card>
-    ))}
-  </div>
-)
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Ventas Hoy', value: stats?.daily_total || 0, icon: TrendingUp, bg: 'bg-[#FFF0F0]', color: 'text-[#C62828]' },
+          { label: 'Transacciones', value: stats?.transaction_count || 0, icon: Clock, bg: 'bg-[#F4BFBF]/30', color: 'text-[#C62828]' },
+          { label: 'Alertas Stock', value: stats?.low_stock_products?.length || 0, icon: AlertTriangle, bg: 'bg-amber-50', color: 'text-amber-600', action: () => setShowLowStock(!showLowStock) },
+        ].map((stat, i) => (
+          <div key={i} onClick={stat.action} className={stat.action ? "cursor-pointer transition-transform active:scale-95" : ""}>
+            <Card className="flex items-center gap-4 p-6 border border-brand-light/30 shadow-lg shadow-brand/5 h-full" hover>
+              <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
+                <stat.icon size={26} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{stat.label}</p>
+                <p className="text-2xl font-black text-text-main leading-none">
+                  {stat.label.includes('Ventas') || stat.label.includes('Ticket') ? '$' : ''}
+                  <AnimatedNumber value={stat.value} />
+                </p>
+              </div>
+            </Card>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {showLowStock && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <Card className="p-4 bg-amber-50/50 border border-amber-200 shadow-sm" padding="p-4">
+              <h4 className="text-amber-800 font-bold mb-3 flex items-center gap-2">
+                <AlertTriangle size={18} />
+                Productos Faltantes (Stock Crítico)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {stats?.low_stock_products?.length > 0 ? (
+                  stats.low_stock_products.map((p, idx) => (
+                    <div key={idx} className="flex flex-col p-2 bg-white rounded-lg border border-amber-100 shadow-sm gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-xs text-text-main truncate pr-2">{p.name}</span>
+                        <Badge variant="warning">{p.stock} {p.is_bulk ? 'kg' : 'pzs'}</Badge>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onIgnoreAlert(p.id); }}
+                        className="text-[10px] text-amber-600 font-bold bg-amber-50 hover:bg-amber-100 py-1 px-2 rounded w-full border border-amber-200 transition-colors"
+                      >
+                        Ignorar (No urge)
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-amber-600 font-bold italic col-span-full">Todo el inventario está estable.</p>
+                )}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 const ChartWidget = ({ chartData }) => {
   const data = useMemo(() => {
@@ -223,6 +268,25 @@ const Dashboard = () => {
   const { layout, reorder, toggleVisibility } = useDashboardStore()
   const { addNotification } = useNotificationStore()
 
+  const handleIgnoreAlert = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`http://localhost:5000/api/v1/products/${id}/ignore-alerts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ ignore_stock_alerts: true })
+      })
+      if (res.ok) {
+        fetchStats()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     fetchStats()
   }, [])
@@ -240,7 +304,7 @@ const Dashboard = () => {
   }
 
   const widgetMap = {
-    stats:        <StatsWidget stats={stats} />,
+    stats:        <StatsWidget stats={stats} onIgnoreAlert={handleIgnoreAlert} />,
     salesChart:   <ChartWidget chartData={stats?.chart_data} />,
     topProducts:  <TopProductsWidget topProduct={stats?.top_product_today} />,
     lowStock:     <LowStockWidget lowStock={stats?.low_stock_products} />,

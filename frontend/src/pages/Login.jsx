@@ -371,7 +371,7 @@ const Login = () => {
 
               {/* Indicador de PIN (6 puntos) */}
               <motion.div
-                className="flex gap-4 mb-8"
+                className="flex gap-4 mb-2"
                 animate={isError ? { x: [0, -10, 10, -10, 10, -6, 6, 0] } : { x: 0 }}
                 transition={{ duration: 0.5 }}
               >
@@ -394,6 +394,23 @@ const Login = () => {
                   />
                 ))}
               </motion.div>
+
+              {/* Mensaje de error (reservamos espacio para que no salte) */}
+              <div className="h-6 mb-2">
+                <AnimatePresence>
+                  {isError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="text-sm font-black text-center"
+                      style={{ color: '#DC2626' }}
+                    >
+                      PIN incorrecto
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Teclado numérico 3×4 */}
               <div className="grid grid-cols-3 gap-3 w-full max-w-[260px]">

@@ -8,6 +8,7 @@ from backend.models import Product, CashRegister, User
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 from sqlalchemy import text
 
 ai_bp = Blueprint('ai', __name__)
@@ -88,8 +89,8 @@ def chat():
 
     try:
         total_products = db.session.execute(text("SELECT COUNT(*) FROM product")).scalar() or 0
-        today = datetime.today().date()
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
+        today = get_local_date()
+        current_time = get_local_now().strftime('%Y-%m-%d %H:%M')
         todays_sales = db.session.execute(text("SELECT COALESCE(SUM(total), 0) FROM sale WHERE DATE(date) = :t"), {"t": today}).scalar() or 0
         
         top_product = db.session.execute(text("""
@@ -106,7 +107,7 @@ def chat():
         corte_abierto = caja_open > 0
     except Exception:
         total_products = "N/A"
-        today = datetime.today().date()
+        today = get_local_date()
         current_time = "Desconocida"
         todays_sales = 0
         top_product = "N/A"
@@ -177,8 +178,8 @@ Contexto actual de la tienda ({current_time}):
                             user_obj = User.query.filter_by(username=current_user_id).first()
                             
                         new_reg = CashRegister(
-                            date=datetime.now(timezone.utc).date(),
-                            opened_at=datetime.now(timezone.utc),
+                            date=get_local_date(),
+                            opened_at=get_local_now(),
                             opening_amount=float(amount),
                             status='open',
                             opened_by_id=user_obj.id if user_obj else None

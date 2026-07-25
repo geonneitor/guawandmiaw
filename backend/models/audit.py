@@ -1,9 +1,10 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class AuditLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    date = db.Column(db.DateTime, default=lambda: get_local_now(), nullable=False)
     action = db.Column(db.String(50), nullable=False) # e.g., 'AJUSTE_MANUAL_STOCK', 'CANCELACION_VENTA'
     description = db.Column(db.String(255), nullable=False)
     

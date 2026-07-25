@@ -458,7 +458,7 @@ const Finanzas = () => {
                   <Lock size={40} />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black text-text-main uppercase tracking-tighter">Caja Cerrada</h2>
+                  <h2 className="text-3xl font-sans font-black text-text-main uppercase tracking-tighter">Caja Cerrada</h2>
                   <p className="text-text-muted max-w-sm mx-auto mt-2">Para comenzar a realizar ventas y registrar movimientos, debes abrir un turno.</p>
                 </div>
                 <Button 

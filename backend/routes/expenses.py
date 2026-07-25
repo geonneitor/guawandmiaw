@@ -5,6 +5,7 @@ from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 expenses_bp = Blueprint('expenses', __name__)
 
@@ -32,7 +33,7 @@ def add_expense():
         new_expense = Expense(
             description=data['description'],
             amount=float(data['amount']),
-            date=datetime.fromisoformat(data['date']) if data.get('date') else datetime.now(timezone.utc),
+            date=datetime.fromisoformat(data['date']) if data.get('date') else get_local_now(),
             cash_register_id=open_register.id
         )
         db.session.add(new_expense)

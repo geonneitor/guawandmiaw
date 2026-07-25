@@ -1,11 +1,12 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class CashRegister(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False, default='open')
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    opened_at = db.Column(db.DateTime, default=lambda: get_local_now())
     closed_at = db.Column(db.DateTime, nullable=True)
     opening_amount = db.Column(db.Float, nullable=False, default=0.0)
     expected_amount_left = db.Column(db.Float, nullable=True)
@@ -44,7 +45,7 @@ class CashMovement(db.Model):
     type = db.Column(db.String(10), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    date = db.Column(db.DateTime, default=lambda: get_local_now())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cash_register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=True)
     user = db.relationship('User')
@@ -69,7 +70,7 @@ class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    date = db.Column(db.DateTime, default=lambda: get_local_now())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cash_register_id = db.Column(db.Integer, db.ForeignKey('cash_register.id'), nullable=True)
     user = db.relationship('User')

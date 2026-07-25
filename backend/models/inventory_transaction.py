@@ -1,5 +1,6 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class InventoryTransaction(db.Model):
     __tablename__ = 'inventory_transaction'
@@ -10,7 +11,7 @@ class InventoryTransaction(db.Model):
     transaction_type = db.Column(db.String(20), nullable=False)
     quantity = db.Column(db.Float, nullable=False)
     balance_after = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    date = db.Column(db.DateTime, default=lambda: get_local_now(), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     reference_note = db.Column(db.String(255), nullable=True)
 

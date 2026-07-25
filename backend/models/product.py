@@ -1,5 +1,6 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,6 +18,7 @@ class Product(db.Model):
     bulto_weight = db.Column(db.Float, default=0.0)
     barcode = db.Column(db.String(50), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    ignore_stock_alerts = db.Column(db.Boolean, default=False)
     # Foreign Keys
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=True)
@@ -31,8 +33,8 @@ class Product(db.Model):
     expiry_date = db.Column(db.Date, nullable=True)
 
     # Audit
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: get_local_now())
+    updated_at = db.Column(db.DateTime, default=lambda: get_local_now(), onupdate=lambda: get_local_now())
 
     # Relationships
     category = db.relationship('Category', backref='products')
@@ -58,6 +60,7 @@ class Product(db.Model):
             'bulto_weight': round(float(self.bulto_weight), 3) if self.bulto_weight else 0,
             'barcode': self.barcode,
             'is_active': self.is_active,
+            'ignore_stock_alerts': self.ignore_stock_alerts,
             'category_id': self.category_id,
             'category': self.category.name if self.category else 'General',
             'brand_id': self.brand_id,

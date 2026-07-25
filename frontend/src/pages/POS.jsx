@@ -292,6 +292,34 @@ const POS = () => {
                           <Badge variant="error">Sin Stock</Badge>
                         </div>
                       )}
+
+                      {/* DETALLES AL HOVER (OVERLAY) */}
+                      <div className="absolute inset-0 bg-bg-card/95 dark:bg-bg-card/98 backdrop-blur-md z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col p-4 translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                         <div className="flex-1">
+                           <p className="text-brand font-black text-[10px] uppercase tracking-widest mb-1">{product.category}</p>
+                           <p className="text-text-main font-bold text-sm leading-snug mb-3 line-clamp-4">{product.name}</p>
+                           <div className="space-y-1.5">
+                             <p className="text-xs text-text-muted flex justify-between">
+                               <span>Stock:</span>
+                               <span className="font-bold text-text-main">{product.is_bulk ? `${(product.stock + (product.bulto_stock * product.bulto_weight)).toFixed(2)} kg` : `${product.stock} uds`}</span>
+                             </p>
+                             <p className="text-xs text-text-muted flex justify-between">
+                               <span>Precio:</span>
+                               <span className="font-bold text-brand">${product.price}</span>
+                             </p>
+                             {product.barcode && (
+                               <p className="text-[9px] text-text-muted mt-2 pt-2 border-t border-border-subtle truncate">
+                                 CB: {product.barcode}
+                               </p>
+                             )}
+                           </div>
+                         </div>
+                         <div className="mt-auto pt-2">
+                           <div className={`w-full py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md ${((product.is_bulk ? (product.stock + (product.bulto_stock * product.bulto_weight)) : product.stock) > 0) ? 'bg-brand text-white' : 'bg-red-100 text-red-500'}`}>
+                             {((product.is_bulk ? (product.stock + (product.bulto_stock * product.bulto_weight)) : product.stock) > 0) ? <><Plus size={14} /> Click para agregar</> : <><X size={14} /> Agotado</>}
+                           </div>
+                         </div>
+                      </div>
                     </button>
                     ))}
                   

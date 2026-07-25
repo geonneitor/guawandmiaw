@@ -1,5 +1,6 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -8,7 +9,7 @@ class Client(db.Model):
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(255), nullable=True)
     loyalty_points = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: get_local_now())
 
     def __init__(self, **kwargs):
         super(Client, self).__init__(**kwargs)

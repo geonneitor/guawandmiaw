@@ -77,7 +77,9 @@ def create_app(config_class=Config):
         from flask import request
         if request.path.startswith('/api/'):
             return jsonify({"success": False, "error": "Recurso no encontrado (404)"}), 404
-        return render_template('index.html')
+        if request.path.startswith('/assets/') or request.path.endswith('.js') or request.path.endswith('.css'):
+            return "Not Found", 404
+        return send_from_directory(dist_dir, 'index.html')
 
     @app.errorhandler(500)
     def handle_500(e):
@@ -86,7 +88,7 @@ def create_app(config_class=Config):
     # Base Routes
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return send_from_directory(dist_dir, 'index.html')
 
     @app.route('/src/<path:filename>')
     def serve_src(filename):
@@ -105,8 +107,10 @@ def create_app(config_class=Config):
         return app.send_static_file('manifest.json')
 
     @app.route('/service-worker.js')
+    @app.route('/sw.js')
     def serve_sw():
-        return app.send_static_file('service-worker.js')
+        # Force unregister the service worker to fix caching issues
+        return "self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('activate', function(e) { self.registration.unregister(); });", 200, {'Content-Type': 'application/javascript'}
 
     return app
 

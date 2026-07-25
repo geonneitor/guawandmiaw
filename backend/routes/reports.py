@@ -5,6 +5,7 @@ from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone, timedelta
+from backend.utils.timezone import get_local_now, get_local_date
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -13,7 +14,7 @@ reports_bp = Blueprint('reports', __name__)
 def get_advanced_reports():
     print("[GET] /reports/advanced - Calculating advanced metrics")
     period = request.args.get('period', 'month')
-    now = datetime.now(timezone.utc)
+    now = get_local_now()
     
     if period == 'week':
         start_date = now - timedelta(days=now.weekday())

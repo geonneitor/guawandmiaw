@@ -5,6 +5,7 @@ from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 corte_bp = Blueprint('corte', __name__)
 
@@ -19,7 +20,7 @@ def get_corte_de_caja():
 
         opening_amount = register_entry.opening_amount
         opened_at = register_entry.opened_at
-        now = datetime.now(timezone.utc)
+        now = get_local_now()
 
         sales_shift = Sale.query.options(
             joinedload(Sale.items)
@@ -101,8 +102,8 @@ def open_register():
     try:
         user_obj = User.query.filter_by(username=data.get('user', '')).first()
         new_register = CashRegister(
-            date=datetime.now(timezone.utc).date(),
-            opened_at=datetime.now(timezone.utc),
+            date=get_local_date(),
+            opened_at=get_local_now(),
             opening_amount=float(data.get('amount', 0)),
             status='open',
             opened_by_id=user_obj.id if user_obj else None
@@ -124,7 +125,7 @@ def close_register():
         return error_response("No hay ningún turno abierto para cerrar", 400)
     try:
         open_register.status = 'closed'
-        open_register.closed_at = datetime.now(timezone.utc)
+        open_register.closed_at = get_local_now()
         expected = float(data.get('expected_amount', 0))
         actual = float(data.get('actual_amount', 0))
         open_register.expected_amount_left = expected

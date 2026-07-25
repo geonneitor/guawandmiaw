@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -135,6 +135,35 @@ const NavItem = ({ to, icon: Icon, label, collapsed }) => {
   )
 }
 
+const LiveClock = () => {
+  const [time, setTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatter = new Intl.DateTimeFormat('es-MX', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })
+  
+  // formatea como "vie, 21 jul, 12:00 p.m." y lo capitaliza
+  const formatted = formatter.format(time).replace('.', '').replace('.', '')
+  const capitalized = formatted.charAt(0).toUpperCase() + formatted.slice(1)
+
+  return (
+    <div className="mt-1.5 bg-brand/10 text-brand px-2 py-1 rounded-lg text-[10px] font-bold tracking-tight inline-flex items-center gap-1.5 border border-brand/20 shadow-sm whitespace-nowrap">
+      <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></div>
+      {capitalized}
+    </div>
+  )
+}
+
 const Sidebar = () => {
   const { sidebarOpen, toggleSidebar, darkMode, toggleDarkMode } = useUIStore()
   const { user, logout } = useAuthStore()
@@ -195,6 +224,7 @@ const Sidebar = () => {
             <div className="flex flex-col">
               <span className="font-display font-black text-brand text-lg leading-none tracking-tighter">GUAW & MIAW</span>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand/70 mt-1">Pet Shop</span>
+              <LiveClock />
             </div>
           </motion.div>
         ) : (

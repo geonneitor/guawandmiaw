@@ -1,5 +1,6 @@
 from backend.extensions import db
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 import bcrypt
 
 class User(db.Model):
@@ -14,7 +15,7 @@ class User(db.Model):
     display_name = db.Column(db.String(100), nullable=True)
     theme = db.Column(db.String(30), default='pastel')
     dark_mode = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: get_local_now())
     last_login = db.Column(db.DateTime, nullable=True)
 
     def __init__(self, **kwargs):

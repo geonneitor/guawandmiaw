@@ -9,6 +9,7 @@ from backend.models.token_blocklist import TokenBlocklist
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from datetime import datetime, timezone
+from backend.utils.timezone import get_local_now, get_local_date
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -49,7 +50,7 @@ def login():
     if not user.is_active:
         return error_response("Esta cuenta está desactivada. Contacta al administrador.", 403)
 
-    user.last_login = datetime.now(timezone.utc)
+    user.last_login = get_local_now()
     db.session.commit()
 
     access_token = create_access_token(identity=str(user.id), additional_claims={

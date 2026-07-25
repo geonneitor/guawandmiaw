@@ -57,7 +57,8 @@ def add_product():
             promo_discount=int(round(float(data['promo_discount']))) if data.get('promo_discount') else None,
             promo_start_date=datetime.strptime(data.get('promo_start_date'), '%Y-%m-%d').date() if data.get('promo_start_date') else None,
             expiry_date=datetime.strptime(data.get('expiry_date'), '%Y-%m-%d').date() if data.get('expiry_date') else None,
-            min_stock=float(data.get('min_stock', 0))
+            min_stock=float(data.get('min_stock', 0)),
+            ignore_stock_alerts=data.get('ignore_stock_alerts', False)
         )
         db.session.add(new_product)
         db.session.commit()
@@ -120,6 +121,9 @@ def update_product(id):
         
         if 'min_stock' in data:
             product.min_stock = float(data['min_stock'])
+            
+        if 'ignore_stock_alerts' in data:
+            product.ignore_stock_alerts = bool(data['ignore_stock_alerts'])
         
         db.session.commit()
         return success_response(product.to_dict())
@@ -139,6 +143,20 @@ def delete_product(id):
         db.session.add(audit)
         db.session.commit()
         return success_response(None, "Producto archivado correctamente")
+    except Exception as e:
+        db.session.rollback()
+        return error_response(str(e), 500)
+
+@products_bp.route('/products/<int:id>/ignore-alerts', methods=['POST'])
+@require_auth('admin', 'encargado')
+def ignore_stock_alerts(id):
+    print(f"[POST] /products/{id}/ignore-alerts")
+    product = db.get_or_404(Product, id)
+    data = request.json or {}
+    try:
+        product.ignore_stock_alerts = data.get('ignore_stock_alerts', True)
+        db.session.commit()
+        return success_response(product.to_dict(), "Alerta de stock ignorada")
     except Exception as e:
         db.session.rollback()
         return error_response(str(e), 500)
