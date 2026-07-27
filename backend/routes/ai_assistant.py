@@ -68,6 +68,37 @@ tools = [
                 "required": ["amount"],
             },
         },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "clear_cart",
+            "description": "Vacía el carrito de compras actual del usuario.",
+            "parameters": {"type": "object", "properties": {}},
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "register_expense",
+            "description": "Registra un nuevo gasto operativo (como limpieza, insumos, pagos).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string", "description": "Descripción del gasto."},
+                    "amount": {"type": "number", "description": "Monto del gasto."}
+                },
+                "required": ["description", "amount"],
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_sales",
+            "description": "Consulta el total de ventas completadas del día actual.",
+            "parameters": {"type": "object", "properties": {}}
+        }
     }
 ]
 
@@ -76,11 +107,9 @@ tools = [
 def chat():
     data = request.json
     frontend_messages = data.get('messages', [])
-    prompt = data.get('prompt')
+    context = data.get('context', {})
     
-    if not frontend_messages and prompt:
-        frontend_messages = [{"role": "user", "content": prompt}]
-    elif not frontend_messages:
+    if not frontend_messages:
         return error_response("Mensaje requerido", 400)
 
     api_key = os.environ.get('GROQ_API_KEY')
@@ -121,9 +150,12 @@ REGLAS FLEXIBLES (Puedes ayudar en más cosas):
 2. Si te preguntan operaciones matemáticas (calculadora), resuélvelas directamente. 
 3. Si te piden agregar algo al carrito, PRIMERO usa 'check_inventory' para buscar el producto y su ID. Luego usa 'add_to_cart' indicando el ID y cantidad.
 4. Si te piden abrir caja, PREGUNTA PRIMERO con cuánto efectivo exactamente, y luego usa 'open_cash_register'.
+5. Si el usuario pide registrar un gasto, usa 'register_expense'. Si pide vaciar el carrito, usa 'clear_cart'.
 
 Contexto actual de la tienda ({current_time}):
-- Productos en inventario: {total_products}
+- Pantalla actual del usuario: {context.get('path', 'Desconocido')}
+- ¿Hay productos en el carrito del usuario?: {"Sí, " + str(len(context.get('cart', []))) + " elementos" if context.get('cart') else "No"}
+- Productos en inventario general: {total_products}
 - Ventas totales hoy: ${float(todays_sales):,.2f}
 - Producto más vendido hoy: {top_product}
 - ¿Caja Abierta?: {"Sí" if corte_abierto else "No"}"""
@@ -156,7 +188,12 @@ Contexto actual de la tienda ({current_time}):
                 
                 if function_name == "check_inventory":
                     p_name = function_args.get("product_name", "")
-                    products = Product.query.filter(Product.name.ilike(f"%{p_name}%")).limit(5).all()
+                    words = p_name.split()
+                    query = Product.query
+                    for w in words:
+                        query = query.filter(Product.name.ilike(f"%{w}%"))
+                    products = query.limit(5).all()
+                    
                     if products:
                         res = [f"ID: {p.id}, Nombre: {p.name}, Precio: ${p.price}, Stock: {p.stock}" for p in products]
                         tool_result = "Encontrados:\n" + "\n".join(res)
@@ -208,6 +245,34 @@ Contexto actual de la tienda ({current_time}):
                         tool_result = "Error: Producto no existe."
                         
                     messages.append({"role": "tool", "tool_call_id": tool_call.id, "name": function_name, "content": tool_result})
+
+                elif function_name == "clear_cart":
+                    actions_for_frontend.append({"type": "CLEAR_CART"})
+                    tool_result = "Éxito: Carrito vaciado. Dile al usuario que ya se vació el carrito."
+                    messages.append({"role": "tool", "tool_call_id": tool_call.id, "name": function_name, "content": tool_result})
+
+                elif function_name == "register_expense":
+                    desc = function_args.get("description", "")
+                    amt = function_args.get("amount", 0)
+                    try:
+                        open_reg = CashRegister.query.filter_by(status='open').first()
+                        if open_reg:
+                            from backend.models import Expense
+                            new_exp = Expense(description=desc, amount=float(amt), date=get_local_now(), cash_register_id=open_reg.id)
+                            db.session.add(new_exp)
+                            db.session.commit()
+                            tool_result = f"Gasto registrado con éxito: {desc} por ${amt}."
+                        else:
+                            tool_result = "Error: No hay caja abierta para registrar gastos."
+                    except Exception as e:
+                        tool_result = f"Error: {e}"
+                    messages.append({"role": "tool", "tool_call_id": tool_call.id, "name": function_name, "content": tool_result})
+
+                elif function_name == "query_sales":
+                    today = get_local_date()
+                    sales = db.session.execute(text("SELECT COALESCE(SUM(total), 0) FROM sale WHERE DATE(date) = :t AND is_archived = False AND status = 'completed'"), {"t": today}).scalar() or 0
+                    tool_result = f"Ventas totales hoy: ${sales}"
+                    messages.append({"role": "tool", "tool_call_id": tool_call.id, "name": function_name, "content": tool_result})
                     
             second_response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -216,12 +281,15 @@ Contexto actual de la tienda ({current_time}):
                 temperature=0.1,
             )
             final_reply = second_response.choices[0].message.content
+            messages.append({"role": "assistant", "content": final_reply})
         else:
             final_reply = response_message.content
+            messages.append({"role": "assistant", "content": final_reply})
             
         return success_response({
             "reply": final_reply,
-            "actions": actions_for_frontend
+            "actions": actions_for_frontend,
+            "messages": messages[1:]
         })
         
     except Exception as e:
