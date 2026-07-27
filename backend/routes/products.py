@@ -38,14 +38,15 @@ def add_product():
         if not barcode:
             barcode = f"AUTO-{int(time.time()*1000)}-{random.randint(100,999)}"
 
+        is_bulk = data.get('is_bulk', False)
         new_product = Product(
             name=data.get('name'),
             price=int(round(float(data.get('price')))),        # Sin decimales
             cost=int(round(float(data.get('cost', 0)))),       # Sin decimales
             stock=float(data.get('stock', 0)),
-            is_bulk=data.get('is_bulk', False),
-            sell_by=data.get('sell_by', 'price'),              # 'weight' | 'price'
-            unit=data.get('unit', 'ud'),
+            is_bulk=is_bulk,
+            sell_by='weight' if is_bulk else 'price',          # Auto-derivado de is_bulk
+            unit=data.get('unit', 'kg' if is_bulk else 'ud'),
             bulto_stock=int(data.get('bulto_stock', 0)),
             bulto_weight=float(data.get('bulto_weight', 0)),
             category_id=cat.id,
@@ -98,7 +99,7 @@ def update_product(id):
             
         product.cost = int(round(float(data.get('cost', product.cost))))     # Sin decimales
         product.is_bulk = data.get('is_bulk', product.is_bulk)
-        product.sell_by = data.get('sell_by', product.sell_by or 'price')    # 'weight' | 'price'
+        product.sell_by = 'weight' if product.is_bulk else 'price'          # Auto-derivado de is_bulk
         product.unit = data.get('unit', product.unit)
         product.bulto_stock = int(data.get('bulto_stock', product.bulto_stock))
         product.bulto_weight = float(data.get('bulto_weight', product.bulto_weight))
@@ -330,6 +331,8 @@ def import_products():
                     existing_product.category_id = cat.id
                     if barcode: existing_product.barcode = barcode
                     existing_product.is_bulk = is_bulk
+                    existing_product.sell_by = 'weight' if is_bulk else 'price'
+                    existing_product.unit = 'kg' if is_bulk else existing_product.unit
                     existing_product.supplier_id = supplier_id
                     existing_product.promo_active = promo_active
                     existing_product.promo_min_quantity = promo_min_quantity
@@ -348,6 +351,8 @@ def import_products():
                         category_id=cat.id,
                         barcode=barcode,
                         is_bulk=is_bulk,
+                        sell_by='weight' if is_bulk else 'price',
+                        unit='kg' if is_bulk else 'ud',
                         supplier_id=supplier_id,
                         promo_active=promo_active,
                         promo_min_quantity=promo_min_quantity,

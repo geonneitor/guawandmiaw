@@ -65,6 +65,7 @@ const Inventory = () => {
     stock: '',
     min_stock: '',
     is_bulk: false,
+    sell_by: 'price',
     unit: 'ud',
     bulto_stock: 0,
     bulto_weight: 0,
@@ -138,6 +139,7 @@ const Inventory = () => {
       setFormData({
         ...product,
         category: product.category || 'General',
+        sell_by: product.is_bulk ? 'weight' : 'price',
         promo_active: product.promo_active || false,
         promo_type: product.promo_type || 'bundle',
         promo_min_quantity: product.promo_min_quantity || '',
@@ -150,7 +152,7 @@ const Inventory = () => {
       setEditingProduct(null)
       setFormData({
         name: '', price: '', cost: '', stock: '', min_stock: '',
-        is_bulk: false, unit: 'ud', bulto_stock: 0, bulto_weight: 0,
+        is_bulk: false, sell_by: 'price', unit: 'ud', bulto_stock: 0, bulto_weight: 0,
         barcode: '', category: categories.filter(c => c !== 'Todos')[0] || 'General',
         promo_active: false, promo_type: 'bundle', promo_min_quantity: '', promo_discount: '', promo_start_date: '', expiry_date: '',
         ignore_stock_alerts: false
@@ -584,14 +586,14 @@ const Inventory = () => {
                 <div className="flex gap-2 mt-2">
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, is_bulk: true, unit: 'kg'})}
+                    onClick={() => setFormData({...formData, is_bulk: true, sell_by: 'weight', unit: 'kg'})}
                     className={`flex-1 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${formData.is_bulk ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-white dark:bg-bg-card text-text-muted border border-border-subtle'}`}
                   >
                     A Granel (Kg)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, is_bulk: false, unit: 'ud'})}
+                    onClick={() => setFormData({...formData, is_bulk: false, sell_by: 'price', unit: 'ud'})}
                     className={`flex-1 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${!formData.is_bulk ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'bg-white dark:bg-bg-card text-text-muted border border-border-subtle'}`}
                   >
                     Por Unidad

@@ -80,6 +80,8 @@ with app.app_context():
                 category_id=cat.id,
                 barcode=barcode,
                 is_bulk=is_bulk,
+                sell_by='weight' if is_bulk else 'price',
+                unit='kg' if is_bulk else 'ud',
                 supplier_id=supplier_id,
                 promo_active=promo_active,
                 promo_min_quantity=promo_min_quantity,
