@@ -14,7 +14,7 @@ expenses_bp = Blueprint('expenses', __name__)
 def get_expenses():
     print("[GET] /expenses - Listing all expenses")
     try:
-        expenses = Expense.query.options(joinedload(Expense.user)).order_by(Expense.date.desc()).all()
+        expenses = Expense.query.options(joinedload(Expense.user)).filter(Expense.is_archived == False).order_by(Expense.date.desc()).all()
         return success_response([e.to_dict() for e in expenses])
     except Exception as e:
         return error_response(str(e), 500)

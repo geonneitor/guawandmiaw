@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Settings as SettingsIcon, Store, Palette, Shield, Database, Bell, Users as UsersIcon, Moon, Sun, Phone, MapPin, Mail, FileText, Save, RotateCcw } from 'lucide-react'
+import { Settings as SettingsIcon, Store, Palette, Shield, Database, Bell, Users as UsersIcon, Moon, Sun, Phone, MapPin, Mail, FileText, Save, RotateCcw, Archive } from 'lucide-react'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
 import Button from '../design-system/components/Button'
@@ -153,6 +153,42 @@ const AppearanceSection = () => {
   )
 }
 
+const ArchiveSection = () => {
+  const { addNotification } = useNotificationStore()
+  const [archiving, setArchiving] = useState(false)
+
+  const handleArchive = async () => {
+    if (!window.confirm("¿Estás seguro de que deseas archivar las ventas y gastos antiguos? Esto los removerá de las vistas principales.")) return
+    
+    setArchiving(true)
+    try {
+      const res = await api.post('/settings/archive')
+      if (res.success) {
+        addNotification(`Limpieza completada. Ventas archivadas: ${res.data.archived_sales}, Gastos: ${res.data.archived_expenses}`, 'success')
+      } else {
+        addNotification(res.error || 'Error al archivar', 'error')
+      }
+    } catch (e) {
+      addNotification('Error al contactar el servidor', 'error')
+    }
+    setArchiving(false)
+  }
+
+  return (
+    <Card className="p-8" padding="p-8">
+      <h3 className="font-sans font-extrabold text-2xl tracking-tight mb-6 flex items-center gap-2 text-brand">
+        <Archive size={20} />
+        Limpieza de Interfaz (Archivero)
+      </h3>
+      <p className="text-text-muted font-bold mb-6">Esta acción moverá las ventas y gastos actuales al archivero, quitándolos de la vista principal para limpiar tu interfaz. Los datos seguirán estando seguros en la base de datos.</p>
+      
+      <Button icon={Archive} onClick={handleArchive} disabled={archiving}>
+        {archiving ? 'Archivando...' : 'Archivar Registros'}
+      </Button>
+    </Card>
+  )
+}
+
 const Settings = () => {
   const [activeSection, setActiveSection] = useState('store')
 
@@ -168,6 +204,7 @@ const Settings = () => {
               { id: 'store', label: 'Tienda', icon: Store },
               { id: 'users', label: 'Usuarios', icon: UsersIcon },
               { id: 'appearance', label: 'Apariencia', icon: Palette },
+              { id: 'archive', label: 'Limpieza', icon: Archive },
               { id: 'security', label: 'Seguridad', icon: Shield },
               { id: 'db', label: 'Base de Datos', icon: Database },
             ].map((item) => (
@@ -200,6 +237,10 @@ const Settings = () => {
             ) : activeSection === 'appearance' ? (
               <motion.div key="appearance" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
                 <AppearanceSection />
+              </motion.div>
+            ) : activeSection === 'archive' ? (
+              <motion.div key="archive" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+                <ArchiveSection />
               </motion.div>
             ) : (
               <motion.div key="other" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
