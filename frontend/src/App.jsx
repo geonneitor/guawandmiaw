@@ -94,12 +94,12 @@ const AppContent = () => {
             <Route path="/dashboard" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Dashboard /></RoleGuard> : <Navigate to="/login" />} />
             <Route path="/inventory" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Inventory /></RoleGuard> : <Navigate to="/login" />} />
             <Route path="/clients"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Clients /></RoleGuard> : <Navigate to="/login" />} />
-            <Route path="/reports"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Reports /></RoleGuard> : <Navigate to="/login" />} />
             
             {/* Rutas protegidas — módulos que antes redirigían a otras páginas */}
             <Route path="/suppliers" element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Suppliers /></RoleGuard> : <Navigate to="/login" />} />
-            <Route path="/sales"     element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Sales /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/sales"     element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado', 'cajero']} fallback={<Navigate to="/pos" />}><Sales /></RoleGuard> : <Navigate to="/login" />} />
             <Route path="/expenses"  element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Expenses /></RoleGuard> : <Navigate to="/login" />} />
+            <Route path="/reports"   element={isAuthenticated ? <RoleGuard roles={['admin']} fallback={<Navigate to="/pos" />}><Reports /></RoleGuard> : <Navigate to="/login" />} />
             <Route path="/users"     element={isAuthenticated ? <RoleGuard roles={['admin']} fallback={<Navigate to="/pos" />}><Users /></RoleGuard> : <Navigate to="/login" />} />
             <Route path="/restock"   element={isAuthenticated ? <RoleGuard roles={['admin', 'encargado']} fallback={<Navigate to="/pos" />}><Restock /></RoleGuard> : <Navigate to="/login" />} />
             
