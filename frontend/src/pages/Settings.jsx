@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-<<<<<<< HEAD
-import { Settings as SettingsIcon, Store, Palette, Shield, Database, Bell, Users as UsersIcon, Moon, Sun, Phone, MapPin, Mail, FileText, Save, RotateCcw, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react'
-=======
-import { Settings as SettingsIcon, Store, Palette, Shield, Database, Bell, Users as UsersIcon, Moon, Sun, Phone, MapPin, Mail, FileText, Save, RotateCcw, Archive } from 'lucide-react'
->>>>>>> origin/main
+import { Settings as SettingsIcon, Store, Palette, Shield, Database, Bell, Users as UsersIcon, Moon, Sun, Phone, MapPin, Mail, FileText, Save, RotateCcw, Trash2, AlertTriangle, CheckCircle2, Archive } from 'lucide-react'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
 import Button from '../design-system/components/Button'
