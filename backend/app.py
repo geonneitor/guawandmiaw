@@ -58,6 +58,7 @@ def create_app(config_class=Config):
     from backend.routes.auth_routes import auth_bp
     from backend.routes.settings_routes import settings_bp
     from backend.routes.ai_assistant import ai_bp
+    from backend.routes.cleanup import cleanup_bp
     
     app.register_blueprint(products_bp, url_prefix='/api/v1')
     app.register_blueprint(sales_bp, url_prefix='/api/v1')
@@ -70,6 +71,7 @@ def create_app(config_class=Config):
     app.register_blueprint(settings_bp, url_prefix='/api/v1')
     app.register_blueprint(inventory_bp, url_prefix='/api/v1')
     app.register_blueprint(ai_bp, url_prefix='/api/v1/ai')
+    app.register_blueprint(cleanup_bp, url_prefix='/api/v1')
 
     # Global Error Handlers
     @app.errorhandler(404)

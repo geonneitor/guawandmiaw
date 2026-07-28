@@ -20,7 +20,8 @@ import {
   ClipboardList,
   User,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  CalendarPlus
 } from 'lucide-react'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
@@ -33,6 +34,7 @@ import { corteApi } from '../api/corte'
 import Sales from './Sales'
 import Expenses from './Expenses'
 import AnimatedNumber from '../components/AnimatedNumber'
+import mascotaPose3 from '../assets/mascota-pose3.png'
 
 const Finanzas = () => {
   const [activeTab, setActiveTab] = useState('corte')
@@ -47,6 +49,7 @@ const Finanzas = () => {
   const [showOpenModal, setShowOpenModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [showMovementModal, setShowMovementModal] = useState({ open: false, type: 'in' })
+  const [showPastShiftModal, setShowPastShiftModal] = useState(false)
   
   // Form states (separated to avoid conflicts)
   const [openAmount, setOpenAmount] = useState('')
@@ -54,6 +57,12 @@ const Finanzas = () => {
   const [moveReason, setMoveReason] = useState('')
   const [actualAmount, setActualAmount] = useState('')
   const [closeReason, setCloseReason] = useState('')
+
+  // Turno extemporáneo
+  const [pastDate, setPastDate] = useState('')
+  const [pastOpenAmount, setPastOpenAmount] = useState('')
+  const [pastCloseAmount, setPastCloseAmount] = useState('')
+  const [pastLoading, setPastLoading] = useState(false)
 
   const { addNotification } = useNotificationStore()
   const { user } = useAuthStore()
@@ -191,12 +200,41 @@ const Finanzas = () => {
     transferencia: Smartphone,
   }
 
+  const handlePastShift = async () => {
+    if (!pastDate) { addNotification('Selecciona la fecha del turno', 'error'); return }
+    const openVal = parseFloat(pastOpenAmount)
+    const closeVal = parseFloat(pastCloseAmount)
+    if (isNaN(openVal) || openVal < 0) { addNotification('Ingresa un monto inicial válido', 'error'); return }
+    if (isNaN(closeVal) || closeVal < 0) { addNotification('Ingresa el monto de cierre', 'error'); return }
+    setPastLoading(true)
+    try {
+      const res = await corteApi.openPastRegister({
+        date: pastDate,
+        amount: openVal,
+        close_amount: closeVal,
+        user: user?.username
+      })
+      if (res.success) {
+        addNotification('Turno extemporáneo registrado correctamente', 'success')
+        setShowPastShiftModal(false)
+        setPastDate(''); setPastOpenAmount(''); setPastCloseAmount('')
+        fetchHistory()
+      } else {
+        addNotification(res.error || 'Error al registrar turno', 'error')
+      }
+    } catch (err) {
+      addNotification('Error de conexión', 'error')
+    } finally {
+      setPastLoading(false)
+    }
+  }
+
   return (
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative">
         <div className="flex items-end gap-6 relative z-10">
           <motion.img 
-            src="/src/assets/mascota-pose3.png" 
+            src={mascotaPose3}
             alt="Mascota" 
             className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl hidden md:block"
             animate={{ y: [0, -10, 0] }}
@@ -239,14 +277,27 @@ const Finanzas = () => {
         ) : activeTab === 'history' ? (
           <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
             <Card className="p-6" padding="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
-                  <ClipboardList size={20} />
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
+                    <ClipboardList size={20} />
+                  </div>
+                  <div>
+                    <h2 className="font-sans font-extrabold text-2xl text-text-main tracking-tight">Historial de Turnos</h2>
+                    <p className="text-xs text-text-muted font-bold">Registro completo de aperturas y cierres de caja</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-sans font-extrabold text-2xl text-text-main tracking-tight">Historial de Turnos</h2>
-                  <p className="text-xs text-text-muted font-bold">Registro completo de aperturas y cierres de caja</p>
-                </div>
+                {/* Botón turno extemporáneo — solo admin */}
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => setShowPastShiftModal(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-brand text-brand font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-white transition-all group"
+                    title="Registrar turno de un día pasado"
+                  >
+                    <CalendarPlus size={16} className="group-hover:scale-110 transition-transform" />
+                    + Turno atrasado
+                  </button>
+                )}
               </div>
 
               {loadingHistory ? (
@@ -725,6 +776,58 @@ const Finanzas = () => {
           )}
 
           <Button className="w-full py-4 text-lg" icon={Lock} onClick={handleCloseRegister}>Realizar Corte y Cerrar</Button>
+        </div>
+      </Modal>
+
+      {/* MODAL: TURNO EXTEMPORÁNEO */}
+      <Modal isOpen={showPastShiftModal} onClose={() => setShowPastShiftModal(false)} title="Registrar Turno Atrasado">
+        <div className="space-y-5 py-2">
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3">
+            <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+            <p className="text-xs text-amber-800 font-medium">
+              Solo para <strong>administradores</strong>. Registra un turno de un día pasado.
+              El inventario y los reportes semanales/mensuales lo incluirán correctamente.
+            </p>
+          </div>
+
+          {/* Selector de fecha — prominente */}
+          <div>
+            <label className="text-[10px] font-black text-brand uppercase tracking-widest block mb-2 flex items-center gap-1.5">
+              <CalendarPlus size={12} />
+              📅 Fecha del turno (pasado)
+            </label>
+            <input
+              type="date"
+              value={pastDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setPastDate(e.target.value)}
+              className="w-full px-4 py-4 bg-brand/5 border-2 border-brand rounded-2xl outline-none font-black text-text-main text-lg cursor-pointer"
+            />
+          </div>
+
+          <Input
+            label="Monto Inicial del Turno ($)"
+            type="number"
+            placeholder="0.00"
+            value={pastOpenAmount}
+            onChange={e => setPastOpenAmount(e.target.value)}
+          />
+          <Input
+            label="Monto de Cierre / Real Contado ($)"
+            type="number"
+            placeholder="0.00"
+            value={pastCloseAmount}
+            onChange={e => setPastCloseAmount(e.target.value)}
+          />
+
+          <Button
+            className="w-full py-4 text-lg"
+            icon={CalendarPlus}
+            onClick={handlePastShift}
+            disabled={pastLoading}
+          >
+            {pastLoading ? 'Registrando...' : 'Registrar Turno Atrasado'}
+          </Button>
         </div>
       </Modal>
     </PageWrapper>
