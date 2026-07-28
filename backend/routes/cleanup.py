@@ -124,6 +124,7 @@ def open_past_register():
 
     open_amount = float(data.get('amount', 0))
     close_amount = float(data.get('close_amount', 0))
+    sales_data = data.get('sales', [])
 
     try:
         from backend.models import User
@@ -138,7 +139,7 @@ def open_past_register():
             opened_at=opened_at,
             closed_at=closed_at,
             opening_amount=open_amount,
-            expected_amount_left=close_amount,
+            expected_amount_left=open_amount, # Se calculará con las ventas en efectivo
             actual_amount_left=close_amount,
             status='closed',
             opened_by_id=user_obj.id if user_obj else None,
@@ -146,21 +147,83 @@ def open_past_register():
             discrepancy_reason='Turno extemporáneo registrado por admin'
         )
         db.session.add(past_register)
+        db.session.flush()
+
+        total_cash_sales = 0.0
+        sales_by_pm = {}
+        for item in sales_data:
+            pm = (item.get('payment_method') or 'cash').lower()
+            if pm not in sales_by_pm:
+                sales_by_pm[pm] = []
+            sales_by_pm[pm].append(item)
+
+        for pm, items in sales_by_pm.items():
+            new_sale = Sale(
+                total=0.0,
+                payment_method=pm,
+                user_id=user_obj.id if user_obj else 1,
+                cash_register_id=past_register.id,
+                date=opened_at,
+                status='completed'
+            )
+            db.session.add(new_sale)
+            db.session.flush()
+
+            sale_total = 0.0
+            for item in items:
+                prod_id = item.get('product_id')
+                qty = float(item.get('quantity', 0))
+                price_override = item.get('price')
+
+                product = db.session.get(Product, prod_id)
+                if not product:
+                    raise Exception(f"Producto con ID {prod_id} no encontrado.")
+
+                # Descontar stock
+                product.stock = round(float(product.stock) - qty, 3)
+
+                price_at_sale = float(price_override) if price_override is not None else float(product.price)
+                subtotal = round(price_at_sale * qty, 2)
+
+                sale_item = SaleItem(
+                    sale_id=new_sale.id,
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=qty,
+                    price_at_sale=price_at_sale,
+                    subtotal=subtotal
+                )
+                db.session.add(sale_item)
+                sale_total += subtotal
+
+            new_sale.total = round(sale_total, 2)
+            if pm in ['cash', 'efectivo']:
+                total_cash_sales += sale_total
+
+        # El esperado en caja es el fondo inicial más las ventas en efectivo
+        expected_close = round(open_amount + total_cash_sales, 2)
+        past_register.expected_amount_left = expected_close
 
         # AuditLog
         audit = AuditLog(
             action="TURNO_EXTEMPORANEO",
             description=(
                 f"Turno extemporáneo registrado para fecha {date_str}. "
-                f"Fondo inicial: ${open_amount}. Cierre: ${close_amount}."
+                f"Fondo inicial: ${open_amount}. Cierre: ${close_amount}. "
+                f"Ventas totales cargadas: {len(sales_data)} productos."
             ),
         )
         db.session.add(audit)
         db.session.commit()
 
         return success_response(
-            {'register_id': past_register.id, 'date': date_str},
-            f"Turno del {date_str} registrado correctamente.",
+            {
+                'register_id': past_register.id, 
+                'date': date_str,
+                'expected_cash': expected_close,
+                'actual_cash': close_amount
+            },
+            f"Turno del {date_str} registrado correctamente con {len(sales_data)} productos vendidos.",
             201
         )
     except Exception as e:
