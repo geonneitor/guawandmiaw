@@ -68,6 +68,7 @@ const Finanzas = () => {
   const [selectedProductId, setSelectedProductId] = useState('')
   const [selectedProductQty, setSelectedProductQty] = useState('1')
   const [selectedProductPM, setSelectedProductPM] = useState('cash')
+  const [pastSalesMode, setPastSalesMode] = useState('kilos') // kilos o pesos
 
   const { addNotification } = useNotificationStore()
   const { user } = useAuthStore()
@@ -220,24 +221,46 @@ const Finanzas = () => {
     const product = products.find(p => p.id === parseInt(selectedProductId))
     if (!product) return
 
-    const qty = parseFloat(selectedProductQty)
-    if (isNaN(qty) || qty <= 0) {
+    const inputVal = parseFloat(selectedProductQty)
+    if (isNaN(inputVal) || inputVal <= 0) {
       addNotification('Ingresa una cantidad válida mayor a cero', 'error')
       return
+    }
+
+    let finalQty = inputVal
+    let finalSubtotal = product.price * inputVal
+    let displayFormat = `${inputVal} ud`
+
+    if (product.is_bulk) {
+      if (pastSalesMode === 'pesos') {
+        // Venta por pesos: calcular kilos correspondientes
+        finalQty = Number((inputVal / product.price).toFixed(3))
+        finalSubtotal = inputVal
+        displayFormat = `$${inputVal.toFixed(2)} (${finalQty} Kg)`
+      } else {
+        // Venta por kilos
+        finalQty = inputVal
+        finalSubtotal = product.price * inputVal
+        displayFormat = `${inputVal} Kg`
+      }
     }
 
     const existingIdx = pastSales.findIndex(item => item.id === product.id && item.payment_method === selectedProductPM)
     if (existingIdx > -1) {
       const updated = [...pastSales]
-      updated[existingIdx].quantity += qty
+      updated[existingIdx].quantity = Number((updated[existingIdx].quantity + finalQty).toFixed(3))
+      updated[existingIdx].displayFormat = product.is_bulk 
+        ? `${(updated[existingIdx].quantity * product.price).toFixed(2)} ($) (${updated[existingIdx].quantity} Kg)`
+        : `${updated[existingIdx].quantity} ud`
       setPastSales(updated)
     } else {
       setPastSales([...pastSales, {
         id: product.id,
         name: product.name,
         price: product.price,
-        quantity: qty,
-        payment_method: selectedProductPM
+        quantity: finalQty,
+        payment_method: selectedProductPM,
+        displayFormat
       }])
     }
     addNotification(`${product.name} agregado a la lista`, 'success')
@@ -880,7 +903,13 @@ const Finanzas = () => {
                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Producto</label>
                 <select
                   value={selectedProductId}
-                  onChange={e => setSelectedProductId(e.target.value)}
+                  onChange={e => {
+                    setSelectedProductId(e.target.value);
+                    const prod = products.find(p => p.id === parseInt(e.target.value));
+                    if (prod && !prod.is_bulk) {
+                      setPastSalesMode('kilos'); // reset regular products to standard units/kilos
+                    }
+                  }}
                   className="w-full px-3 py-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl font-bold text-xs outline-none"
                 >
                   <option value="">Selecciona producto...</option>
@@ -893,11 +922,35 @@ const Finanzas = () => {
               </div>
 
               <div>
-                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Cantidad</label>
+                {selectedProductId && products.find(p => p.id === parseInt(selectedProductId))?.is_bulk ? (
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-0.5">
+                      {pastSalesMode === 'pesos' ? 'Venta en Pesos ($)' : 'Venta en Kilos (Kg)'}
+                    </label>
+                    <div className="flex gap-1.5 mb-1.5 bg-white dark:bg-bg-card p-0.5 rounded-lg border border-border-subtle">
+                      <button
+                        type="button"
+                        onClick={() => setPastSalesMode('kilos')}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${pastSalesMode === 'kilos' ? 'bg-brand text-white' : 'text-text-muted'}`}
+                      >
+                        Kg
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPastSalesMode('pesos')}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${pastSalesMode === 'pesos' ? 'bg-brand text-white' : 'text-text-muted'}`}
+                      >
+                        Pesos ($)
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Cantidad</label>
+                )}
                 <input
                   type="number"
                   step="any"
-                  placeholder="1"
+                  placeholder={pastSalesMode === 'pesos' ? "Monto en $" : "1"}
                   value={selectedProductQty}
                   onChange={e => setSelectedProductQty(e.target.value)}
                   className="w-full px-3 py-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl font-bold text-xs outline-none"
@@ -935,7 +988,7 @@ const Finanzas = () => {
                     <div className="flex-1 min-w-0 pr-2">
                       <p className="font-bold text-text-main truncate">{item.name}</p>
                       <p className="text-[9px] text-text-muted font-bold">
-                        Cant: {item.quantity} • Pago: {item.payment_method.toUpperCase()}
+                        Vendido: {item.displayFormat} • Pago: {item.payment_method.toUpperCase()}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">

@@ -336,9 +336,9 @@ const AppearanceSection = () => {
 }
 
 const Settings = () => {
-  const [activeSection, setActiveSection] = useState('store')
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'admin'
+  const [activeSection, setActiveSection] = useState(isAdmin ? 'store' : 'appearance')
 
   return (
     <PageWrapper className="flex flex-col gap-6">
@@ -349,12 +349,16 @@ const Settings = () => {
         <Card className="lg:col-span-1 p-2 h-fit" padding="p-2">
           <nav className="flex flex-col gap-1">
             {[
-              { id: 'store', label: 'Tienda', icon: Store },
-              { id: 'users', label: 'Usuarios', icon: UsersIcon },
+              ...(isAdmin ? [
+                { id: 'store', label: 'Tienda', icon: Store },
+                { id: 'users', label: 'Usuarios', icon: UsersIcon },
+              ] : []),
               { id: 'appearance', label: 'Apariencia', icon: Palette },
-              { id: 'security', label: 'Seguridad', icon: Shield },
-              { id: 'db', label: 'Base de Datos', icon: Database },
-              ...(isAdmin ? [{ id: 'cleanup', label: 'Limpieza', icon: Trash2 }] : []),
+              ...(isAdmin ? [
+                { id: 'security', label: 'Seguridad', icon: Shield },
+                { id: 'db', label: 'Base de Datos', icon: Database },
+                { id: 'cleanup', label: 'Limpieza', icon: Trash2 }
+              ] : []),
             ].map((item) => (
               <button 
                 key={item.id}
@@ -374,11 +378,11 @@ const Settings = () => {
         {/* Panel Central */}
         <div className="lg:col-span-3">
           <AnimatePresence mode="wait">
-            {activeSection === 'users' ? (
+            {activeSection === 'users' && isAdmin ? (
               <motion.div key="users" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
                 <Users />
               </motion.div>
-            ) : activeSection === 'store' ? (
+            ) : activeSection === 'store' && isAdmin ? (
               <motion.div key="store" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-6">
                 <StoreSection />
               </motion.div>
@@ -393,7 +397,7 @@ const Settings = () => {
             ) : (
               <motion.div key="other" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
                 <Card className="p-20 text-center" padding="p-20">
-                  <p className="text-text-muted font-bold">Esta sección está en desarrollo.</p>
+                  <p className="text-text-muted font-bold">Esta sección está en desarrollo o restringida.</p>
                 </Card>
               </motion.div>
             )}
