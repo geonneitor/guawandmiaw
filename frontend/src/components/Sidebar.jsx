@@ -180,7 +180,8 @@ const Sidebar = () => {
       title: 'Administración',
       items: [
         { to: '/inventory', icon: Package,         label: 'Inventario', roles: ['admin', 'encargado'] },
-        { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] }
+        { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] },
+        { to: '/reports',   icon: BarChart3,       label: 'Reportes',   roles: ['admin'] }
       ]
     },
     {
@@ -195,7 +196,7 @@ const Sidebar = () => {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: [] },
     { to: '/pos',       icon: ShoppingCart,    label: 'Vender', roles: [] },
     { to: '/inventory', icon: Package,         label: 'Stock',  roles: ['admin', 'encargado'] },
-    { to: '/corte',     icon: Calculator,      label: 'Caja',   roles: [] },
+    { to: '/reports',   icon: BarChart3,       label: 'Reportes', roles: ['admin'] },
     { to: '/settings',  icon: SettingsIcon,    label: 'Más',    roles: [] }
   ]
  

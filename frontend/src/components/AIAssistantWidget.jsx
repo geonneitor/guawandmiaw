@@ -71,7 +71,7 @@ const AIAssistantWidget = () => {
   const [skin, setSkin] = useState(FIGARO_SKIN);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: FIGARO_SKIN.greeting }
+    { role: 'assistant', content: FIGARO_SKIN.greeting }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,7 +89,7 @@ const AIAssistantWidget = () => {
   const toggleSkin = () => {
     const next = skin.id === 'figaro' ? CHILITIT_SKIN : FIGARO_SKIN;
     setSkin(next);
-    setMessages([{ role: 'assistant', text: next.greeting }]);
+    setMessages([{ role: 'assistant', content: next.greeting }]);
   };
 
   // ── Enviar mensaje ────────────────────────────────────────────────────────
@@ -99,30 +99,29 @@ const AIAssistantWidget = () => {
     if (!text || isLoading) return;
 
     setInput('');
-    const newMessages = [...messages, { role: 'user', text }];
+    const newMessages = [...messages, { role: 'user', content: text }];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      // Filtrar el saludo inicial si es necesario o simplemente mapear
-      const apiMessages = newMessages.map(m => ({
-        role: m.role,
-        content: m.text
-      }));
+      const cart = useCartStore.getState().items;
+      const path = window.location.pathname;
+      const context = { path, cart };
       
-      const response = await aiApi.sendMessage(apiMessages);
+      const response = await aiApi.sendMessage(newMessages, context);
       
-      const reply = response?.data?.reply ?? response?.reply ?? null;
-      if (response?.success && reply) {
-        setMessages(prev => [...prev, { role: 'assistant', text: String(reply) }]);
+      if (response?.success && response?.data) {
+        if (response.data.messages) {
+          setMessages(response.data.messages);
+        } else if (response.data.reply) {
+          setMessages(prev => [...prev, { role: 'assistant', content: String(response.data.reply) }]);
+        }
         
         // Manejar acciones del Agente
-        const actions = response?.data?.actions ?? response?.actions ?? [];
+        const actions = response?.data?.actions || [];
         actions.forEach(action => {
           if (action.type === 'ADD_TO_CART' && action.product) {
             useCartStore.getState().addItem(action.product, action.quantity || 1);
-            
-            // Notificación interactiva
             useNotificationStore.getState().addNotification(
               <div className="flex items-center gap-3">
                 <div>Se agregó <strong>{action.product.name}</strong> al carrito.</div>
@@ -135,17 +134,20 @@ const AIAssistantWidget = () => {
               </div>,
               'success'
             );
+          } else if (action.type === 'CLEAR_CART') {
+            useCartStore.getState().clearCart();
+            useNotificationStore.getState().addNotification('El carrito ha sido vaciado.', 'success');
           }
         });
 
       } else {
         const errMsg = response?.error || 'Algo salió mal.';
-        setMessages(prev => [...prev, { role: 'assistant', text: `Ups: ${errMsg}` }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: `Ups: ${errMsg}` }]);
       }
     } catch {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: 'Error de conexión con mis servidores gatunos. Verifica tu API Key o conexión.'
+        content: 'Error de conexión con mis servidores gatunos. Verifica tu API Key o conexión.'
       }]);
     } finally {
       setIsLoading(false);
@@ -255,7 +257,7 @@ const AIAssistantWidget = () => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar"
               style={{ background: 'linear-gradient(to bottom, #f8f9fa, #ffffff)' }}>
-              {messages.map((msg, i) => (
+              {messages.filter(msg => (msg.role === 'user' || msg.role === 'assistant') && msg.content).map((msg, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20, y: 6 }}
@@ -264,7 +266,7 @@ const AIAssistantWidget = () => {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm shadow-sm ${skin[msg.role === 'user' ? 'bubbleUser' : 'bubbleAI']}`}>
-                    {renderText(msg.text)}
+                    {renderText(msg.content)}
                   </div>
                 </motion.div>
               ))}

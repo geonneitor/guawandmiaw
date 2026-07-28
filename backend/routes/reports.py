@@ -10,7 +10,7 @@ from backend.utils.timezone import get_local_now, get_local_date
 reports_bp = Blueprint('reports', __name__)
 
 @reports_bp.route('/reports/advanced', methods=['GET'])
-@require_auth('admin', 'encargado')
+@require_auth('admin')
 def get_advanced_reports():
     print("[GET] /reports/advanced - Calculating advanced metrics")
     period = request.args.get('period', 'month')

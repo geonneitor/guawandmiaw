@@ -11,6 +11,7 @@ class Sale(db.Model):
     cancelled_at = db.Column(db.DateTime, nullable=True)
     cancelled_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cancellation_reason = db.Column(db.String(255), nullable=True)
+    is_archived = db.Column(db.Boolean, default=False)
     
     # FK Relationships
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

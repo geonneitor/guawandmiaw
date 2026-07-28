@@ -18,7 +18,7 @@ def get_sales():
             joinedload(Sale.items),
             joinedload(Sale.user),
             joinedload(Sale.client)
-        ).order_by(Sale.date.desc()).limit(100).all()
+        ).filter(Sale.is_archived == False).order_by(Sale.date.desc()).limit(100).all()
         result = []
         for s in sales:
             items = [{'product_name': i.product_name, 'quantity': i.quantity, 'price': i.price_at_sale, 'subtotal': i.subtotal} for i in s.items]
@@ -149,7 +149,7 @@ def get_stats():
         # Solo incluir ventas completadas
         sales_today = Sale.query.options(
             joinedload(Sale.user)
-        ).filter(Sale.date >= start_of_today, Sale.status == 'completed').order_by(Sale.date.desc()).all()
+        ).filter(Sale.date >= start_of_today, Sale.status == 'completed', Sale.is_archived == False).order_by(Sale.date.desc()).all()
 
         total_sales = sum(s.total for s in sales_today)
         transaction_count = len(sales_today)
