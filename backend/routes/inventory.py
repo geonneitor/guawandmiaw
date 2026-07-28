@@ -55,19 +55,38 @@ def create_restock():
             total_po_cost += (qty * unit_cost)
 
             # Update Product Stock and Cost (Average or latest)
-            product.stock += qty
-            product.cost = round(unit_cost, 2) # Actualizamos al último costo
+            if product.is_bulk and item_data.get('is_bulk_restock'):
+                bultos = int(item_data.get('bultos', 0))
+                bulto_weight = float(item_data.get('bulto_weight', 0))
+                product.bulto_stock += bultos
+                if bulto_weight > 0:
+                    product.bulto_weight = bulto_weight
+                    # unit_cost is cost per bulto, product.cost is cost per kg
+                    product.cost = round(unit_cost / bulto_weight, 2)
 
-            # Log Transaction in Ledger
-            transaction = InventoryTransaction(
-                product_id=product.id,
-                transaction_type='RESTOCK',
-                quantity=qty,
-                balance_after=product.stock,
-                user_id=user_id,
-                reference_note=f"Orden de compra #{po.id} de proveedor {supplier.name}"
-            )
-            db.session.add(transaction)
+                transaction = InventoryTransaction(
+                    product_id=product.id,
+                    transaction_type='RESTOCK',
+                    quantity=bultos,
+                    balance_after=product.stock,
+                    user_id=user_id,
+                    reference_note=f"Resurtido de {bultos} bulto(s) de {bulto_weight}kg. Orden #{po.id}"
+                )
+                db.session.add(transaction)
+            else:
+                product.stock += qty
+                product.cost = round(unit_cost, 2) # Actualizamos al último costo
+
+                # Log Transaction in Ledger
+                transaction = InventoryTransaction(
+                    product_id=product.id,
+                    transaction_type='RESTOCK',
+                    quantity=qty,
+                    balance_after=product.stock,
+                    user_id=user_id,
+                    reference_note=f"Orden de compra #{po.id} de proveedor {supplier.name}"
+                )
+                db.session.add(transaction)
 
         po.total_cost = total_po_cost
         

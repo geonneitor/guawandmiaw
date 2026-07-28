@@ -8,5 +8,6 @@ export const salesApi = {
   getSalesReport: (params) => api.get('/reports/sales', params),
   getAdvancedReports: (params) => api.get('/reports/advanced', params),
   deleteSale: (id) => api.delete(`/sales/${id}`),
+  cancelSale: (id) => api.delete(`/sales/${id}`), // alias semántico usado en Sales.jsx
   clearAll: () => api.delete('/sales/all'),
 }

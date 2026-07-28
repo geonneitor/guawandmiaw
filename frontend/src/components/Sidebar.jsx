@@ -172,7 +172,7 @@ const Sidebar = () => {
     {
       title: 'Operaciones',
       items: [
-        { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: ['admin', 'encargado'] },
+        { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard',  roles: [] },
         { to: '/pos',       icon: ShoppingCart,    label: 'Vender',     roles: [] }
       ]
     },
@@ -193,7 +193,7 @@ const Sidebar = () => {
   ]
 
   const mobileMenuItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: ['admin', 'encargado'] },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: [] },
     { to: '/pos',       icon: ShoppingCart,    label: 'Vender', roles: [] },
     { to: '/inventory', icon: Package,         label: 'Stock',  roles: ['admin', 'encargado'] },
     { to: '/reports',   icon: BarChart3,       label: 'Reportes', roles: ['admin'] },

@@ -9,5 +9,8 @@ export const corteApi = {
   addMovement: (data) => api.post('/movements', data),
   getHistory: () => api.get('/register/history'),
   deleteHistory: () => api.delete('/register/history'),
+  openPastRegister: (data) => api.post('/register/open-past', data),
+  dayCleanup: () => api.delete('/day-cleanup'),
+  getDaySummary: () => api.get('/day-cleanup/summary'),
 }
 

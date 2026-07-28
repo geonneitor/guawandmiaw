@@ -20,7 +20,8 @@ import {
   ClipboardList,
   User,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  CalendarPlus
 } from 'lucide-react'
 import PageWrapper from '../components/PageWrapper'
 import Card from '../design-system/components/Card'
@@ -30,9 +31,11 @@ import Modal from '../design-system/components/Modal'
 import { useNotificationStore } from '../store/useNotificationStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { corteApi } from '../api/corte'
+import { useInventoryStore } from '../store/useInventoryStore'
 import Sales from './Sales'
 import Expenses from './Expenses'
 import AnimatedNumber from '../components/AnimatedNumber'
+import mascotaPose3 from '../assets/mascota-pose3.png'
 
 const Finanzas = () => {
   const [activeTab, setActiveTab] = useState('corte')
@@ -47,6 +50,7 @@ const Finanzas = () => {
   const [showOpenModal, setShowOpenModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
   const [showMovementModal, setShowMovementModal] = useState({ open: false, type: 'in' })
+  const [showPastShiftModal, setShowPastShiftModal] = useState(false)
   
   // Form states (separated to avoid conflicts)
   const [openAmount, setOpenAmount] = useState('')
@@ -55,8 +59,20 @@ const Finanzas = () => {
   const [actualAmount, setActualAmount] = useState('')
   const [closeReason, setCloseReason] = useState('')
 
+  // Turno extemporáneo
+  const [pastDate, setPastDate] = useState('')
+  const [pastOpenAmount, setPastOpenAmount] = useState('')
+  const [pastCloseAmount, setPastCloseAmount] = useState('')
+  const [pastLoading, setPastLoading] = useState(false)
+  const [pastSales, setPastSales] = useState([])
+  const [selectedProductId, setSelectedProductId] = useState('')
+  const [selectedProductQty, setSelectedProductQty] = useState('1')
+  const [selectedProductPM, setSelectedProductPM] = useState('cash')
+  const [pastSalesMode, setPastSalesMode] = useState('kilos') // kilos o pesos
+
   const { addNotification } = useNotificationStore()
   const { user } = useAuthStore()
+  const { products, fetchProducts } = useInventoryStore()
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -191,12 +207,110 @@ const Finanzas = () => {
     transferencia: Smartphone,
   }
 
+  const pastCashSalesTotal = pastSales
+    .filter(s => s.payment_method === 'cash')
+    .reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
+  const pastExpectedCash = (parseFloat(pastOpenAmount) || 0) + pastCashSalesTotal
+
+  const handleAddPastProduct = () => {
+    if (!selectedProductId) {
+      addNotification('Selecciona un producto primero', 'error')
+      return
+    }
+    const product = products.find(p => p.id === parseInt(selectedProductId))
+    if (!product) return
+
+    const inputVal = parseFloat(selectedProductQty)
+    if (isNaN(inputVal) || inputVal <= 0) {
+      addNotification('Ingresa una cantidad válida mayor a cero', 'error')
+      return
+    }
+
+    let finalQty = inputVal
+    let finalSubtotal = product.price * inputVal
+    let displayFormat = `${inputVal} ud`
+
+    if (product.is_bulk) {
+      if (pastSalesMode === 'pesos') {
+        // Venta por pesos: calcular kilos correspondientes
+        finalQty = Number((inputVal / product.price).toFixed(3))
+        finalSubtotal = inputVal
+        displayFormat = `$${inputVal.toFixed(2)} (${finalQty} Kg)`
+      } else {
+        // Venta por kilos
+        finalQty = inputVal
+        finalSubtotal = product.price * inputVal
+        displayFormat = `${inputVal} Kg`
+      }
+    }
+
+    const existingIdx = pastSales.findIndex(item => item.id === product.id && item.payment_method === selectedProductPM)
+    if (existingIdx > -1) {
+      const updated = [...pastSales]
+      updated[existingIdx].quantity = Number((updated[existingIdx].quantity + finalQty).toFixed(3))
+      updated[existingIdx].displayFormat = product.is_bulk 
+        ? `${(updated[existingIdx].quantity * product.price).toFixed(2)} ($) (${updated[existingIdx].quantity} Kg)`
+        : `${updated[existingIdx].quantity} ud`
+      setPastSales(updated)
+    } else {
+      setPastSales([...pastSales, {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: finalQty,
+        payment_method: selectedProductPM,
+        displayFormat
+      }])
+    }
+    addNotification(`${product.name} agregado a la lista`, 'success')
+  }
+
+  const handleRemovePastProduct = (index) => {
+    setPastSales(pastSales.filter((_, idx) => idx !== index))
+  }
+
+  const handlePastShift = async () => {
+    if (!pastDate) { addNotification('Selecciona la fecha del turno', 'error'); return }
+    const openVal = parseFloat(pastOpenAmount)
+    const closeVal = parseFloat(pastCloseAmount)
+    if (isNaN(openVal) || openVal < 0) { addNotification('Ingresa un monto inicial válido', 'error'); return }
+    if (isNaN(closeVal) || closeVal < 0) { addNotification('Ingresa el monto de cierre', 'error'); return }
+    setPastLoading(true)
+    try {
+      const res = await corteApi.openPastRegister({
+        date: pastDate,
+        amount: openVal,
+        close_amount: closeVal,
+        user: user?.username,
+        sales: pastSales.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          payment_method: item.payment_method,
+          price: item.price
+        }))
+      })
+      if (res.success) {
+        addNotification('Turno extemporáneo registrado correctamente', 'success')
+        setShowPastShiftModal(false)
+        setPastDate(''); setPastOpenAmount(''); setPastCloseAmount(''); setPastSales([])
+        fetchHistory()
+      } else {
+        addNotification(res.error || 'Error al registrar turno', 'error')
+      }
+    } catch (err) {
+      addNotification('Error de conexión', 'error')
+    } finally {
+      setPastLoading(false)
+    }
+  }
+
   return (
     <PageWrapper className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative">
         <div className="flex items-end gap-6 relative z-10">
           <motion.img 
-            src="/src/assets/mascota-pose3.png" 
+            src={mascotaPose3}
             alt="Mascota" 
             className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl hidden md:block"
             animate={{ y: [0, -10, 0] }}
@@ -239,14 +353,27 @@ const Finanzas = () => {
         ) : activeTab === 'history' ? (
           <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
             <Card className="p-6" padding="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
-                  <ClipboardList size={20} />
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
+                    <ClipboardList size={20} />
+                  </div>
+                  <div>
+                    <h2 className="font-sans font-extrabold text-2xl text-text-main tracking-tight">Historial de Turnos</h2>
+                    <p className="text-xs text-text-muted font-bold">Registro completo de aperturas y cierres de caja</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-sans font-extrabold text-2xl text-text-main tracking-tight">Historial de Turnos</h2>
-                  <p className="text-xs text-text-muted font-bold">Registro completo de aperturas y cierres de caja</p>
-                </div>
+                {/* Botón turno extemporáneo — solo admin */}
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => { fetchProducts(); setPastSales([]); setShowPastShiftModal(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 border-brand text-brand font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-white transition-all group"
+                    title="Registrar turno de un día pasado"
+                  >
+                    <CalendarPlus size={16} className="group-hover:scale-110 transition-transform" />
+                    + Turno atrasado
+                  </button>
+                )}
               </div>
 
               {loadingHistory ? (
@@ -725,6 +852,193 @@ const Finanzas = () => {
           )}
 
           <Button className="w-full py-4 text-lg" icon={Lock} onClick={handleCloseRegister}>Realizar Corte y Cerrar</Button>
+        </div>
+      </Modal>
+
+      {/* MODAL: TURNO EXTEMPORÁNEO */}
+      <Modal isOpen={showPastShiftModal} onClose={() => setShowPastShiftModal(false)} title="Registrar Turno Atrasado" maxWidth="max-w-2xl">
+        <div className="space-y-6 py-2">
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3">
+            <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+            <p className="text-xs text-amber-800 font-medium">
+              Solo para <strong>administradores</strong>. Registra un turno de un día pasado.
+              Los productos agregados se restarán del inventario y las ventas se sumarán a los reportes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Selector de fecha */}
+            <div>
+              <label className="text-[10px] font-black text-brand uppercase tracking-widest block mb-2 flex items-center gap-1.5">
+                <CalendarPlus size={12} />
+                📅 Fecha del turno (pasado)
+              </label>
+              <input
+                type="date"
+                value={pastDate}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={e => setPastDate(e.target.value)}
+                className="w-full px-4 py-3 bg-brand/5 border-2 border-brand rounded-2xl outline-none font-black text-text-main text-sm cursor-pointer"
+              />
+            </div>
+
+            <Input
+              label="Monto Inicial del Turno ($)"
+              type="number"
+              placeholder="0.00"
+              value={pastOpenAmount}
+              onChange={e => setPastOpenAmount(e.target.value)}
+            />
+          </div>
+
+          {/* 📦 SECCIÓN AGREGAR VENTAS */}
+          <div className="p-5 bg-bg-main rounded-3xl border border-border-subtle space-y-4">
+            <h4 className="text-xs font-black text-brand uppercase tracking-widest flex items-center gap-1.5">
+              <Plus size={16} />
+              Agregar Productos Vendidos en este Turno
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Producto</label>
+                <select
+                  value={selectedProductId}
+                  onChange={e => {
+                    setSelectedProductId(e.target.value);
+                    const prod = products.find(p => p.id === parseInt(e.target.value));
+                    if (prod && !prod.is_bulk) {
+                      setPastSalesMode('kilos'); // reset regular products to standard units/kilos
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl font-bold text-xs outline-none"
+                >
+                  <option value="">Selecciona producto...</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (${p.price.toFixed(2)}) {p.is_bulk ? '(Granel)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                {selectedProductId && products.find(p => p.id === parseInt(selectedProductId))?.is_bulk ? (
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-0.5">
+                      {pastSalesMode === 'pesos' ? 'Venta en Pesos ($)' : 'Venta en Kilos (Kg)'}
+                    </label>
+                    <div className="flex gap-1.5 mb-1.5 bg-white dark:bg-bg-card p-0.5 rounded-lg border border-border-subtle">
+                      <button
+                        type="button"
+                        onClick={() => setPastSalesMode('kilos')}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${pastSalesMode === 'kilos' ? 'bg-brand text-white' : 'text-text-muted'}`}
+                      >
+                        Kg
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPastSalesMode('pesos')}
+                        className={`flex-1 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all ${pastSalesMode === 'pesos' ? 'bg-brand text-white' : 'text-text-muted'}`}
+                      >
+                        Pesos ($)
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Cantidad</label>
+                )}
+                <input
+                  type="number"
+                  step="any"
+                  placeholder={pastSalesMode === 'pesos' ? "Monto en $" : "1"}
+                  value={selectedProductQty}
+                  onChange={e => setSelectedProductQty(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl font-bold text-xs outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-1">Método de Pago</label>
+                <select
+                  value={selectedProductPM}
+                  onChange={e => setSelectedProductPM(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl font-bold text-xs outline-none"
+                >
+                  <option value="cash">Efectivo</option>
+                  <option value="card">Tarjeta</option>
+                  <option value="transfer">Transferencia</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAddPastProduct}
+              className="w-full py-2.5 rounded-xl bg-brand text-white font-black text-xs uppercase tracking-widest hover:bg-brand-dark transition-all"
+            >
+              + Agregar Venta
+            </button>
+
+            {/* Listado de ventas agregadas */}
+            {pastSales.length > 0 && (
+              <div className="border-t border-border-subtle pt-3 space-y-2 max-h-48 overflow-y-auto">
+                <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Ventas en este turno atrasado:</p>
+                {pastSales.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-white dark:bg-bg-card border border-border-subtle rounded-xl text-xs">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <p className="font-bold text-text-main truncate">{item.name}</p>
+                      <p className="text-[9px] text-text-muted font-bold">
+                        Vendido: {item.displayFormat} • Pago: {item.payment_method.toUpperCase()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="font-black text-brand">${(item.price * item.quantity).toFixed(2)}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePastProduct(idx)}
+                        className="p-1 text-text-muted hover:text-red-500 rounded-lg hover:bg-red-50"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 📊 DINÁMICO: CÁLCULO DE CAJA */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 bg-bg-main rounded-2xl border border-border-subtle text-center">
+              <p className="text-[8px] font-black text-text-muted uppercase tracking-widest mb-1">Monto Inicial</p>
+              <p className="text-lg font-black text-text-main">${(parseFloat(pastOpenAmount) || 0).toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-bg-main rounded-2xl border border-border-subtle text-center">
+              <p className="text-[8px] font-black text-text-muted uppercase tracking-widest mb-1">Ventas Efectivo</p>
+              <p className="text-lg font-black text-green-600">${pastCashSalesTotal.toFixed(2)}</p>
+            </div>
+            <div className="p-3 bg-brand/5 border border-brand/20 rounded-2xl text-center">
+              <p className="text-[8px] font-black text-brand uppercase tracking-widest mb-1">Esperado en Caja</p>
+              <p className="text-lg font-black text-brand">${pastExpectedCash.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <Input
+            label="Monto de Cierre / Real Contado ($)"
+            type="number"
+            placeholder="0.00"
+            value={pastCloseAmount}
+            onChange={e => setPastCloseAmount(e.target.value)}
+          />
+
+          <Button
+            className="w-full py-4 text-lg"
+            icon={CalendarPlus}
+            onClick={handlePastShift}
+            disabled={pastLoading}
+          >
+            {pastLoading ? 'Registrando...' : 'Registrar Turno Atrasado'}
+          </Button>
         </div>
       </Modal>
     </PageWrapper>

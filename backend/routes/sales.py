@@ -238,7 +238,7 @@ def delete_sale(sale_id):
         sale.status = 'cancelled'
         sale.cancelled_at = get_local_now()
         
-        data = request.json or {}
+        data = request.get_json(silent=True) or {}
         reason = data.get('reason', 'Cancelación por el administrador')
         sale.cancellation_reason = reason
         

@@ -36,15 +36,47 @@ const Restock = ({ isTab }) => {
   const addToCart = (product) => {
     const existing = cart.find(i => i.product_id === product.id);
     if (existing) {
-      setCart(cart.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
+      if (product.is_bulk) {
+        setCart(cart.map(i => i.product_id === product.id ? { ...i, bultos: i.bultos + 1, quantity: i.quantity + 1 } : i));
+      } else {
+        setCart(cart.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
+      }
     } else {
-      setCart([...cart, { product_id: product.id, name: product.name, quantity: 1, unit_cost: product.cost }]);
+      if (product.is_bulk) {
+        const defaultWeight = product.bulto_weight || 20;
+        const defaultBultoCost = (product.cost || 0) * defaultWeight;
+        setCart([...cart, {
+          product_id: product.id,
+          name: product.name,
+          is_bulk_restock: true,
+          bultos: 1,
+          bulto_weight: defaultWeight,
+          quantity: 1, // represents bultos in request
+          unit_cost: defaultBultoCost
+        }]);
+      } else {
+        setCart([...cart, {
+          product_id: product.id,
+          name: product.name,
+          quantity: 1,
+          unit_cost: product.cost
+        }]);
+      }
     }
     setSearchTerm(''); // clear search after adding
   };
 
   const updateCartItem = (id, field, value) => {
-    setCart(cart.map(i => i.product_id === id ? { ...i, [field]: Number(value) } : i));
+    setCart(cart.map(i => {
+      if (i.product_id === id) {
+        const updatedVal = Number(value);
+        if (field === 'bultos') {
+          return { ...i, bultos: updatedVal, quantity: updatedVal };
+        }
+        return { ...i, [field]: updatedVal };
+      }
+      return i;
+    }));
   };
 
   const removeCartItem = (id) => {
@@ -78,7 +110,12 @@ const Restock = ({ isTab }) => {
     }
   };
 
-  const totalCost = cart.reduce((acc, curr) => acc + (curr.quantity * curr.unit_cost), 0);
+  const totalCost = cart.reduce((acc, curr) => {
+    if (curr.is_bulk_restock) {
+      return acc + (curr.bultos * curr.unit_cost);
+    }
+    return acc + (curr.quantity * curr.unit_cost);
+  }, 0);
 
   const Wrapper = isTab ? 'div' : PageWrapper;
 
@@ -140,37 +177,85 @@ const Restock = ({ isTab }) => {
               Agrega productos para resurtir
             </div>
           ) : (
-            cart.map(item => (
-              <div key={item.product_id} className="bg-bg-main p-4 rounded-xl border border-border-color flex flex-col gap-2">
-                <div className="flex justify-between font-bold">
-                  <span>{item.name}</span>
-                  <button onClick={() => removeCartItem(item.product_id)} className="text-red-500 hover:text-red-700">✕</button>
+            cart.map(item => {
+              if (item.is_bulk_restock) {
+                return (
+                  <div key={item.product_id} className="bg-bg-main p-4 rounded-xl border border-border-color flex flex-col gap-2 border-l-4 border-l-amber-500">
+                    <div className="flex justify-between font-bold">
+                      <span className="flex items-center gap-1.5">
+                        📦 {item.name} <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full uppercase tracking-wider">A Granel</span>
+                      </span>
+                      <button onClick={() => removeCartItem(item.product_id)} className="text-red-500 hover:text-red-700">✕</button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 items-center">
+                      <div>
+                        <label className="text-[10px] text-text-muted block font-bold mb-1">Bultos</label>
+                        <input 
+                          type="number" min="1" step="1"
+                          value={item.bultos}
+                          onChange={(e) => updateCartItem(item.product_id, 'bultos', e.target.value)}
+                          className="w-full bg-bg-panel border border-border-color rounded p-2 text-xs font-bold focus:border-brand"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-text-muted block font-bold mb-1">Kg x Bulto</label>
+                        <input 
+                          type="number" min="0.01" step="any"
+                          value={item.bulto_weight}
+                          onChange={(e) => updateCartItem(item.product_id, 'bulto_weight', e.target.value)}
+                          className="w-full bg-bg-panel border border-border-color rounded p-2 text-xs font-bold focus:border-brand"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-text-muted block font-bold mb-1">Costo x Bulto ($)</label>
+                        <input 
+                          type="number" min="0" step="any"
+                          value={item.unit_cost}
+                          onChange={(e) => updateCartItem(item.product_id, 'unit_cost', e.target.value)}
+                          className="w-full bg-bg-panel border border-border-color rounded p-2 text-xs font-bold focus:border-brand"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-border-color/30 text-xs font-bold">
+                      <span className="text-text-muted">Equivale a: {(item.bultos * item.bulto_weight).toFixed(1)} Kg</span>
+                      <span className="text-brand text-sm font-black">Subtotal: ${(item.bultos * item.unit_cost).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <div key={item.product_id} className="bg-bg-main p-4 rounded-xl border border-border-color flex flex-col gap-2">
+                  <div className="flex justify-between font-bold">
+                    <span>{item.name}</span>
+                    <button onClick={() => removeCartItem(item.product_id)} className="text-red-500 hover:text-red-700">✕</button>
+                  </div>
+                  <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                      <label className="text-xs text-text-muted block">Cantidad (Entrada)</label>
+                      <input 
+                        type="number" min="0.01" step="any"
+                        value={item.quantity}
+                        onChange={(e) => updateCartItem(item.product_id, 'quantity', e.target.value)}
+                        className="w-full bg-bg-panel border border-border-color rounded p-2 text-sm focus:border-brand"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-text-muted block">Costo Unitario ($)</label>
+                      <input 
+                        type="number" min="0" step="any"
+                        value={item.unit_cost}
+                        onChange={(e) => updateCartItem(item.product_id, 'unit_cost', e.target.value)}
+                        className="w-full bg-bg-panel border border-border-color rounded p-2 text-sm focus:border-brand"
+                      />
+                    </div>
+                    <div className="flex-1 text-right pt-4 font-bold text-brand">
+                      ${(item.quantity * item.unit_cost).toFixed(2)}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-4 items-center">
-                  <div className="flex-1">
-                    <label className="text-xs text-text-muted block">Cantidad (Entrada)</label>
-                    <input 
-                      type="number" min="0.01" step="any"
-                      value={item.quantity}
-                      onChange={(e) => updateCartItem(item.product_id, 'quantity', e.target.value)}
-                      className="w-full bg-bg-panel border border-border-color rounded p-2 text-sm focus:border-brand"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-text-muted block">Costo Unitario ($)</label>
-                    <input 
-                      type="number" min="0" step="any"
-                      value={item.unit_cost}
-                      onChange={(e) => updateCartItem(item.product_id, 'unit_cost', e.target.value)}
-                      className="w-full bg-bg-panel border border-border-color rounded p-2 text-sm focus:border-brand"
-                    />
-                  </div>
-                  <div className="flex-1 text-right pt-4 font-bold text-brand">
-                    ${(item.quantity * item.unit_cost).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
 
