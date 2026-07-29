@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from backend.extensions import db
-from backend.models import Sale, SaleItem, Product, CashRegister, AuditLog
+from backend.models import Sale, SaleItem, Product, CashRegister, AuditLog, CashMovement, Expense, PurchaseOrder, PurchaseOrderItem, InventoryTransaction
 from backend.utils import success_response, error_response
 from backend.auth_middleware import require_auth
 from backend.utils.timezone import get_local_now, get_local_date
@@ -230,3 +230,42 @@ def open_past_register():
         db.session.rollback()
         print(f"[ERROR] /register/open-past: {str(e)}")
         return error_response(str(e), 500)
+
+
+# ── DELETE: Restablecer todos los datos de operación (Ventas, Gastos, Turnos) ──
+@cleanup_bp.route('/operations/reset', methods=['DELETE'])
+@require_auth('admin')
+def reset_operations():
+    """
+    Borra todos los registros de ventas, gastos, turnos/cortes, 
+    movimientos y transacciones de inventario en la base de datos.
+    Deja la base de datos limpia para comenzar la operación.
+    Conserva los usuarios.
+    """
+    print("[DELETE] /operations/reset - ADMIN RESETTING ALL OPERATIONS DATA")
+    try:
+        # Eliminar registros de transacciones
+        db.session.query(SaleItem).delete()
+        db.session.query(Sale).delete()
+        db.session.query(CashMovement).delete()
+        db.session.query(Expense).delete()
+        db.session.query(PurchaseOrderItem).delete()
+        db.session.query(PurchaseOrder).delete()
+        db.session.query(InventoryTransaction).delete()
+        db.session.query(AuditLog).delete()
+        db.session.query(CashRegister).delete()
+
+        # Audit log de la operación de reset
+        audit = AuditLog(
+            action="RESET_OPERACIONES",
+            description="Restablecimiento total de datos de operacion realizado por admin (ventas, gastos, turnos en ceros)."
+        )
+        db.session.add(audit)
+        db.session.commit()
+
+        return success_response(None, "Todos los datos de operacion han sido eliminados correctamente.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] /operations/reset: {str(e)}")
+        return error_response(str(e), 500)
+

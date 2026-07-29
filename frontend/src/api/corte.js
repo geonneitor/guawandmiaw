@@ -12,5 +12,6 @@ export const corteApi = {
   openPastRegister: (data) => api.post('/register/open-past', data),
   dayCleanup: () => api.delete('/day-cleanup'),
   getDaySummary: () => api.get('/day-cleanup/summary'),
+  resetOperations: () => api.delete('/operations/reset'),
 }
 

@@ -327,7 +327,7 @@ def import_products():
                     existing_product.name = str(row['Nombre']).strip()
                     existing_product.price = price
                     existing_product.cost = cost
-                    existing_product.stock += stock
+                    existing_product.stock = stock
                     existing_product.category_id = cat.id
                     if barcode: existing_product.barcode = barcode
                     existing_product.is_bulk = is_bulk
