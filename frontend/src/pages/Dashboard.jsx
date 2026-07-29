@@ -34,6 +34,7 @@ import AnimatedNumber from '../components/AnimatedNumber'
 import { useDashboardStore } from '../store/useDashboardStore'
 import { useNotificationStore } from '../store/useNotificationStore'
 import { salesApi } from '../api/sales'
+import { inventoryApi } from '../api/inventory'
 
 import logo from '../assets/logo.png'
 
@@ -270,16 +271,8 @@ const Dashboard = () => {
 
   const handleIgnoreAlert = async (id) => {
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`http://localhost:5000/api/v1/products/${id}/ignore-alerts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ ignore_stock_alerts: true })
-      })
-      if (res.ok) {
+      const res = await inventoryApi.ignoreAlerts(id, true)
+      if (res.success) {
         fetchStats()
       }
     } catch (err) {

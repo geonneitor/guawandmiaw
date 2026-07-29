@@ -185,11 +185,13 @@ def get_stats():
         low_stock_products = []
         try:
             low = Product.query.filter(
-                Product.stock <= Product.min_stock,
+                Product.is_active == True,
+                Product.stock <= db.func.coalesce(Product.min_stock, 0.0),
                 Product.ignore_stock_alerts == False
             ).order_by(Product.stock.asc()).limit(10).all()
             for p in low:
                 low_stock_products.append({
+                    'id': p.id,
                     'name': p.name, 
                     'stock': p.stock, 
                     'min_stock': p.min_stock,

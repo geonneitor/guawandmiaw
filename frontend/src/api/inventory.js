@@ -7,6 +7,7 @@ export const inventoryApi = {
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/products/${id}`),
   openBulto: (id) => api.post(`/products/${id}/open-bulto`),
+  ignoreAlerts: (id, ignore) => api.post(`/products/${id}/ignore-alerts`, { ignore_stock_alerts: ignore }),
   getCategories: () => api.get('/categories'),
   getSuppliers: () => api.get('/suppliers'),
   importExcel: (formData) => api.post('/products/import', formData),
