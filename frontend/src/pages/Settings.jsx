@@ -79,6 +79,11 @@ const CleanupSection = () => {
   const [modalStep, setModalStep] = useState(1)
   const [loading, setLoading] = useState(false)
 
+  // Estados para reset completo de operaciones
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetStep, setResetStep] = useState(1)
+  const [resetLoading, setResetLoading] = useState(false)
+
   const fetchSummary = async () => {
     setLoadingSummary(true)
     try {
@@ -109,9 +114,30 @@ const CleanupSection = () => {
     }
   }
 
+  const handleResetOperations = async () => {
+    setResetLoading(true)
+    try {
+      const res = await corteApi.resetOperations()
+      if (res.success) {
+        addNotification('Base de datos restablecida. Historial en ceros.', 'success')
+        setShowResetModal(false)
+        setResetStep(1)
+        fetchSummary()
+        // Recargar la página para limpiar los stores
+        setTimeout(() => window.location.reload(), 1500)
+      } else {
+        addNotification(res.error || 'Error al restablecer base de datos', 'error')
+      }
+    } catch (e) {
+      addNotification('Error de conexión', 'error')
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   return (
-    <>
-      {/* Modal de advertencia rojo */}
+    <div className="space-y-6">
+      {/* MODAL 1: LIMPIEZA DEL DÍA */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -198,7 +224,80 @@ const CleanupSection = () => {
         )}
       </AnimatePresence>
 
-      {/* Panel de Limpieza */}
+      {/* MODAL 2: RESET COMPLETO DE OPERACIONES */}
+      <AnimatePresence>
+        {showResetModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => { if (!resetLoading) { setShowResetModal(false); setResetStep(1) } }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-bg-card rounded-3xl shadow-2xl w-full max-w-md p-8 border-4 border-red-500/30"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${resetStep === 1 ? 'bg-red-100 text-red-600' : 'bg-red-600 text-white animate-pulse'}`}>
+                  <AlertTriangle size={40} />
+                </div>
+                <h3 className="text-xl font-black text-text-main mb-2">
+                  {resetStep === 1 ? '⚠️ Peligro: Restablecer Base de Datos' : '¿SEGURO QUE DESEAS BORRAR TODO?'}
+                </h3>
+                <p className="text-text-muted text-sm font-medium leading-relaxed">
+                  {resetStep === 1
+                    ? 'Esta acción eliminará de forma PERMANENTE todo el historial de ventas, gastos, movimientos, cortes de caja y compras de la tienda. Tu lista de usuarios/empleados no se perderá.'
+                    : 'ESTA ES LA CONFIRMACIÓN FINAL. Se borrarán todas las transacciones históricas en Supabase y el sistema quedará en ceros. Esto no se puede deshacer.'}
+                </p>
+              </div>
+
+              {resetStep === 1 ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowResetModal(false); setResetStep(1) }}
+                    className="flex-1 py-3 rounded-2xl border-2 border-border-subtle font-black text-sm text-text-muted hover:border-red-300 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => setResetStep(2)}
+                    className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-black text-sm hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <AlertTriangle size={16} />
+                    Entendido
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setResetStep(1)}
+                    className="flex-1 py-3 rounded-2xl border-2 border-border-subtle font-black text-sm text-text-muted transition-all"
+                    disabled={resetLoading}
+                  >
+                    Atrás
+                  </button>
+                  <button
+                    onClick={handleResetOperations}
+                    disabled={resetLoading}
+                    className="flex-1 py-3 rounded-2xl bg-red-600 text-white font-black text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {resetLoading
+                      ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      : <Trash2 size={16} />}
+                    {resetLoading ? 'Restableciendo...' : 'BORRAR TODO Y CERO'}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tarjeta 1: Limpieza del Día */}
       <Card className="p-8" padding="p-8">
         <h3 className="font-sans font-extrabold text-2xl tracking-tight mb-2 flex items-center gap-2 text-red-600">
           <Trash2 size={22} />
@@ -246,7 +345,26 @@ const CleanupSection = () => {
           </p>
         )}
       </Card>
-    </>
+
+      {/* Tarjeta 2: Restablecer Base de Datos Completa */}
+      <Card className="p-8 border-2 border-red-600/20 bg-red-50/10" padding="p-8">
+        <h3 className="font-sans font-extrabold text-2xl tracking-tight mb-2 flex items-center gap-2 text-red-700">
+          <AlertTriangle size={22} className="text-red-600" />
+          Restablecer Base de Datos (Limpieza Total)
+        </h3>
+        <p className="text-text-muted text-sm font-medium mb-6">
+          Borra de forma permanente **todas las ventas históricas, gastos, cortes de caja y movimientos** en la base de datos de producción (Supabase). Útil para borrar datos de prueba viejos y comenzar a operar en limpio. Los usuarios/empleados no se borrarán.
+        </p>
+
+        <button
+          onClick={() => { setShowResetModal(true); setResetStep(1) }}
+          className="w-full py-4 rounded-2xl bg-red-600 text-white font-black text-base hover:bg-red-700 transition-colors flex items-center justify-center gap-3 shadow-lg shadow-red-600/10"
+        >
+          <Trash2 size={20} />
+          Restablecer Ventas y Finanzas a Ceros (Limpieza Total)
+        </button>
+      </Card>
+    </div>
   )
 }
 
