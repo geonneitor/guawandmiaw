@@ -619,6 +619,33 @@
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SAFE AREA & AI ASSISTANT WIDGET - MEJORAS MÓVILES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Safe area padding para iOS notch/home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Botón flotante del AI más pequeño en móvil */
+@media (max-width: 640px) {
+  .fixed.inset-0.z-\[100\] {
+    z-index: 9999;
+  }
+}
+
+@media (max-width: 380px) {
+  button[title*="Abrir"] > img {
+    max-width: 48px !important;
+    max-height: 48px !important;
+  }
+}
+
 /* ── CUSTOM SCROLLBAR GUAW & MIAW ── */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
