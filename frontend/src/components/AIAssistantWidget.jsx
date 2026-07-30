@@ -438,16 +438,16 @@ const AIAssistantWidget = () => {
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
 
-  const chatHeight = isFullScreen ? '100dvh' : '560px';
+  const chatHeight = isFullScreen ? '100dvh' : 'min(560px, calc(100dvh - 140px))';
   const chatWidth = isFullScreen
     ? '100vw'
     : 'min(92vw, 400px)';
-  const chatMaxHeight = isFullScreen ? '100dvh' : 'min(82vh, 680px)';
+  const chatMaxHeight = isFullScreen ? '100dvh' : 'min(72vh, 600px)';
 
   return (
     <div
       className={`fixed z-[100] flex flex-col items-end ${
-        isFullScreen ? 'inset-0' : 'bottom-6 right-3 sm:right-6'
+        isFullScreen ? 'inset-0' : 'bottom-16 sm:bottom-6 right-2 sm:right-6'
       }`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -460,7 +460,7 @@ const AIAssistantWidget = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={isFullScreen ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
             transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-            className={`mb-3 sm:mb-6 shadow-2xl rounded-3xl sm:rounded-3xl overflow-hidden flex flex-col border border-white/20 ${
+            className={`mb-2 sm:mb-6 shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col border border-white/20 ${
               isFullScreen ? 'w-full h-full rounded-none !mb-0' : ''
             }`}
             style={{

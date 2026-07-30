@@ -246,19 +246,19 @@ const Sales = () => {
         />
       )}
 
-      {/* Summary bar */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4 border-l-4 border-brand" padding="p-4">
-          <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Ventas Mostradas</p>
-          <p className="text-2xl font-black text-text-main">{filteredSales.length}</p>
+      {/* Summary bar — compacto en móvil */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Card className="p-3 sm:p-4 border-l-[3px] sm:border-l-4 border-brand" padding="p-3 sm:p-4">
+          <p className="text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5 truncate">Ventas</p>
+          <p className="text-lg sm:text-2xl font-black text-text-main">{filteredSales.length}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-green-500" padding="p-4">
-          <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Total Filtrado</p>
-          <p className="text-2xl font-black text-green-600">${totalFiltered.toFixed(2)}</p>
+        <Card className="p-3 sm:p-4 border-l-[3px] sm:border-l-4 border-green-500" padding="p-3 sm:p-4">
+          <p className="text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5 truncate">Total</p>
+          <p className="text-lg sm:text-2xl font-black text-green-600">${totalFiltered.toFixed(2)}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-amber-500" padding="p-4">
-          <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Ticket Promedio</p>
-          <p className="text-2xl font-black text-text-main">
+        <Card className="p-3 sm:p-4 border-l-[3px] sm:border-l-4 border-amber-500" padding="p-3 sm:p-4">
+          <p className="text-[8px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5 truncate">Ticket Prom.</p>
+          <p className="text-lg sm:text-2xl font-black text-text-main truncate">
             ${filteredSales.length > 0 ? (totalFiltered / filteredSales.filter(s => s.status !== 'cancelled').length || 0).toFixed(2) : '0.00'}
           </p>
         </Card>

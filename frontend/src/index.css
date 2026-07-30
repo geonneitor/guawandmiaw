@@ -279,370 +279,152 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MEJORAS RESPONSIVIDAD - GUAW & MIAW
+   RESPONSIVE / MÓVIL - GUAW & MIAW
    ═══════════════════════════════════════════════════════════════ */
 
-@media (max-width: 320px) {
-    :root {
-        --sidebar-width: 200px;
-        --header-height: 50px;
-        --density-pad: 0.5rem;
-        --radius: 12px;
-        --radius-lg: 20px;
-    }
-
-    body, .app-container {
-        min-height: 100vh;
-    }
-
-    .top-bar {
-        padding: 0 0.4rem !important;
-        height: 50px !important;
-        gap: 0.25rem !important;
-    }
-
-    .top-bar .user-info {
-        display: none !important;
-    }
-
-    .topbar-clock {
-        min-width: 65px !important;
-        padding: 0.2rem 0.4rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    .topbar-clock-time {
-        font-size: 0.8rem !important;
-    }
-
-    .topbar-clock-date {
-        display: none !important;
-    }
-
-    #sidebar {
-        width: 180px !important;
-    }
-
-    .sidebar-header {
-        padding: 1rem !important;
-    }
-
-    .sidebar-header .brand-card {
-        padding: 12px !important;
-    }
-
-    .nav-item {
-        padding: 0.6rem 0.8rem !important;
-        font-size: 0.85rem !important;
-    }
-
-    .nav-item span {
-        display: none !important;
-    }
-
-    .nav-item i {
-        min-width: auto !important;
-        margin-right: 0 !important;
-    }
-
-    .main-layout {
-        margin-left: 180px !important;
-    }
-
-    .main-content {
-        padding: 0.5rem !important;
-    }
-
-    /* POS optimización ultra-móvil */
-    .pos-layout {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-        height: auto !important;
-    }
-
-    .pos-products-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.75rem !important;
-    }
-
-    .product-card {
-        padding: 0.6rem !important;
-        font-size: 0.8rem !important;
-    }
-
-    .pos-cart-section {
-        padding: 1rem !important;
-    }
-
-    /* Modales */
-    .modal-content {
-        max-width: calc(100vw - 1rem) !important;
-        width: calc(100vw - 1rem) !important;
-        border-radius: 12px !important;
-    }
-
-    .modal-header {
-        padding: 1rem !important;
-    }
-
-    .modal-header h3 {
-        font-size: 1.1rem !important;
-    }
-
-    .modal-body {
-        padding: 1rem !important;
-    }
-
-    /* Inputs */
-    .pulpos-input {
-        padding: 0.6rem 1rem !important;
-        height: 36px !important;
-        font-size: 16px !important; /* Previene zoom en iOS */
-    }
-
-    /* Botones */
-    .btn-pulpos-primary,
-    .btn-pulpos-secondary,
-    .btn-icon {
-        min-width: 36px !important;
-        height: 36px !important;
-        padding: 0 0.75rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    .btn-cobrar {
-        padding: 1rem !important;
-        font-size: 1rem !important;
-        border-radius: 12px !important;
-    }
-
-    /* Tables */
-    .pulpos-table th,
-    .pulpos-table td {
-        padding: 0.4rem !important;
-        font-size: 0.75rem !important;
-    }
-
-    /* Badges */
-    .badge {
-        padding: 0.25rem 0.5rem !important;
-        font-size: 0.65rem !important;
-    }
-
-    /* Cards */
-    .pulpos-card {
-        padding: 0.75rem !important;
-        border-radius: 12px !important;
-    }
-
-    .cart-item {
-        padding: 0.5rem !important;
-        font-size: 0.8rem !important;
-    }
-
-    .total-amount {
-        font-size: 2rem !important;
-    }
-
-    .total-label {
-        font-size: 0.75rem !important;
-    }
-
-    /* Filter chips */
-    .filter-chip {
-        padding: 0.3rem 0.5rem !important;
-        font-size: 0.68rem !important;
-    }
-
-    /* Offcanvas */
-    .offcanvas-panel {
-        width: 100vw !important;
-    }
-
-    /* Notification panel */
-    .notif-panel {
-        width: 100vw !important;
-    }
-
-    /* Dashboard optimizations */
-    .dash-kpi-grid {
-        grid-template-columns: 1fr !important;
-        gap: 0.75rem !important;
-    }
-
-    .dash-kpi-card {
-        padding: 0.8rem !important;
-        gap: 0.6rem !important;
-    }
-
-    .dash-kpi-value {
-        font-size: 1.1rem !important;
-    }
-
-    .dash-section-title {
-        font-size: 0.65rem !important;
-    }
-}
-
-@media (max-width: 375px) and (min-width: 321px) {
-    .nav-item span {
-        font-size: 0.8rem !important;
-    }
-
-    .pos-products-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-
-    .product-card {
-        font-size: 0.85rem !important;
-    }
-
-    .modal-header h3 {
-        font-size: 1.2rem !important;
-    }
-
-    .pulpos-input {
-        font-size: 16px !important;
-    }
-}
-
-@media (max-height: 500px) {
-    .pos-products-grid {
-        max-height: 40vh !important;
-    }
-
-    .pos-cart-section {
-        max-height: 50vh !important;
-    }
-
-    .modal-content {
-        max-height: 90vh !important;
-        overflow-y: auto !important;
-    }
-
-    .main-layout {
-        min-height: auto !important;
-    }
-}
-
-@media (hover: none) and (pointer: coarse) {
-    button, .btn-icon, .nav-item, .product-card {
-        min-height: 44px !important;
-        min-width: 44px !important;
-    }
-
-    .nav-item:hover {
-        transform: none !important;
-    }
-
-    .btn-pulpos-primary:hover {
-        transform: none !important;
-    }
-
-    .product-card:hover {
-        transform: none !important;
-    }
-
-    .nav-item:active {
-        transform: scale(0.98) !important;
-    }
-
-    .btn-pulpos-primary:active {
-        transform: scale(0.95) !important;
-    }
-}
-
-@media (max-width: 768px) {
-    input, select, textarea {
-        font-size: 16px !important;
-    }
-
-    .pulpos-input {
-        -webkit-appearance: none;
-        appearance: none;
-        border-radius: 12px;
-    }
-
-    input[type="number"] {
-        -webkit-appearance: textfield;
-    }
-
-    select {
-        padding: 0.75rem 1rem !important;
-        border-radius: 12px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236366f1' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 1rem center;
-        padding-right: 2.5rem !important;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-    .main-layout {
-        margin-left: 250px !important;
-    }
-
-    .pos-layout {
-        grid-template-columns: 1fr 320px !important;
-        gap: 1.5rem !important;
-    }
-
-    .pos-cart-section {
-        min-height: 55vh !important;
-    }
-
-    .dashboard-main-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-@media (min-width: 1024px) and (max-width: 1366px) {
-    .main-content {
-        max-width: 1200px !important;
-    }
-
-    .pos-layout {
-        gap: 1.5rem !important;
-        grid-template-columns: 1fr 320px !important;
-    }
-}
-
-@media (min-width: 1366px) {
-    .main-content {
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-
-    .pos-layout {
-        grid-template-columns: 1fr 380px;
-        gap: 2.5rem;
-    }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   SAFE AREA & AI ASSISTANT WIDGET - MEJORAS MÓVILES
-   ═══════════════════════════════════════════════════════════════════════════════ */
-
-/* Safe area padding para iOS notch/home indicator */
+/* ── Safe areas iOS ── */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
 .pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
 
-/* Botón flotante del AI más pequeño en móvil */
-@media (max-width: 640px) {
-  .fixed.inset-0.z-\[100\] {
-    z-index: 9999;
+/* ── Touch targets mínimos en táctiles ── */
+@media (hover: none) and (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  button, 
+  a, 
+  [role="button"],
+  .nav-item, 
+  .product-card {
+    cursor: default;
+  }
+
+  /* Desactivar hover transforms en táctiles */
+  .hover\:scale-105:hover {
+    transform: none !important;
   }
 }
 
-@media (max-width: 380px) {
+/* ── Ultra compacto (< 360px) ── */
+@media (max-width: 360px) {
+  :root {
+    --density-pad: 0.375rem;
+  }
+
+  .hide-on-xs {
+    display: none !important;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Grids más compactos */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Padding reducido en contenedores */
+  main > div > div > div > .p-4 {
+    padding: 0.75rem !important;
+  }
+
+  /* Card padding reducido */
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  /* Tabla horizontal scroll forzado */
+  table {
+    font-size: 0.75rem !important;
+  }
+
+  table th,
+  table td {
+    padding: 0.5rem !important;
+  }
+
+  /* KPI cards compactos */
+  .gap-4 {
+    gap: 0.75rem !important;
+  }
+
+  /* Botón flotante del AI más pequeño */
   button[title*="Abrir"] > img {
     max-width: 48px !important;
     max-height: 48px !important;
+  }
+}
+
+/* ── Móvil estándar (< 640px) ── */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important; /* Previene zoom en iOS */
+  }
+
+  input[type="number"] {
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 12px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C62828' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem !important;
+  }
+
+  /* Modales full-width en móvil */
+  .modal-content,
+  [class*="max-w-"][class*="rounded-[2.5rem]"] {
+    max-width: calc(100vw - 1rem) !important;
+    width: calc(100vw - 1rem) !important;
+    border-radius: 1.25rem !important;
+  }
+
+  /* Fix para modales de BulkSelector */
+  .max-w-md[class*="rounded-"] {
+    max-width: calc(100vw - 1.5rem) !important;
+  }
+}
+
+/* ── Tablets medianas (768-1024px) ── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Pantallas grandes (> 1366px) ── */
+@media (min-width: 1366px) {
+  main > div {
+    max-width: 1400px;
+    margin: 0 auto;
   }
 }
 

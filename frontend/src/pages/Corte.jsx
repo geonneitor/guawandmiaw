@@ -307,22 +307,25 @@ const Finanzas = () => {
 
   return (
     <PageWrapper className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative">
-        <div className="flex items-end gap-6 relative z-10">
-          <motion.img 
-            src={mascotaPose3}
-            alt="Mascota" 
-            className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl hidden md:block"
-            animate={{ y: [0, -10, 0] }}
-            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-          />
-          <div className="pb-2">
-            <h1 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-brand">Finanzas</h1>
-            <p className="text-text-muted font-medium">Caja, historial de ventas y movimientos</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center md:items-end justify-between gap-4 relative">
+          <div className="flex items-end gap-6 relative z-10 min-w-0">
+            <motion.img 
+              src={mascotaPose3}
+              alt="Mascota" 
+              className="w-20 h-20 md:w-40 md:h-40 object-contain drop-shadow-2xl hidden md:block"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            />
+            <div className="pb-2 min-w-0">
+              <h1 className="text-2xl md:text-4xl font-sans font-extrabold tracking-tight text-brand truncate">Finanzas</h1>
+              <p className="text-xs md:text-base text-text-muted font-medium truncate">Caja, historial de ventas y movimientos</p>
+            </div>
           </div>
         </div>
         
-        <div className="flex bg-bg-card/50 backdrop-blur-sm p-1.5 rounded-[1.5rem] border border-border-subtle shadow-sm self-start relative z-10">
+        {/* Tabs con scroll horizontal en móvil */}
+        <div className="flex bg-bg-card/50 backdrop-blur-sm p-1 rounded-xl border border-border-subtle shadow-sm overflow-x-auto custom-scrollbar -mx-1 px-1">
           {[
             { id: 'corte', label: 'Caja', icon: Calculator },
             { id: 'history', label: 'Historial', icon: ClipboardList },
@@ -332,9 +335,9 @@ const Finanzas = () => {
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === tab.id ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-text-muted hover:text-brand'}`}
+              className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-text-muted hover:text-brand'}`}
             >
-              <tab.icon size={14} />
+              <tab.icon size={12} className="sm:w-[14px] sm:h-[14px]" />
               {tab.label}
             </button>
           ))}
@@ -598,38 +601,38 @@ const Finanzas = () => {
               </Card>
             ) : (
               <div className="space-y-6">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <Card className="p-6 border-l-4 border-brand" padding="p-6">
-                    <div className="flex items-center gap-3 text-brand mb-2">
-                      <Banknote size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Fondo Inicial</span>
+                {/* Stats Cards — compactos en móvil */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+                  <Card className="p-3 sm:p-6 border-l-[3px] sm:border-l-4 border-brand" padding="p-3 sm:p-6">
+                    <div className="flex items-center gap-1.5 sm:gap-3 text-brand mb-1 sm:mb-2">
+                      <Banknote size={12} className="sm:w-[16px] sm:h-[16px]" />
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest">Fondo Inicial</span>
                     </div>
-                    <h3 className="text-3xl font-sans font-extrabold tracking-tight text-text-main">${corte?.opening_amount.toFixed(2)}</h3>
+                    <h3 className="text-xl sm:text-3xl font-sans font-extrabold tracking-tight text-text-main truncate">${corte?.opening_amount.toFixed(2)}</h3>
                   </Card>
                   
-                  <Card className="p-6 border-l-4 border-green-500" padding="p-6">
-                    <div className="flex items-center gap-3 text-green-500 mb-2">
-                      <TrendingUp size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Ventas Efectivo</span>
+                  <Card className="p-3 sm:p-6 border-l-[3px] sm:border-l-4 border-green-500" padding="p-3 sm:p-6">
+                    <div className="flex items-center gap-1.5 sm:gap-3 text-green-500 mb-1 sm:mb-2">
+                      <TrendingUp size={12} className="sm:w-[16px] sm:h-[16px]" />
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest">Ventas Efectivo</span>
                     </div>
-                    <h3 className="text-3xl font-sans font-extrabold tracking-tight text-text-main">${corte?.total_cash_sales.toFixed(2)}</h3>
+                    <h3 className="text-xl sm:text-3xl font-sans font-extrabold tracking-tight text-text-main truncate">${corte?.total_cash_sales.toFixed(2)}</h3>
                   </Card>
 
-                  <Card className="p-6 border-l-4 border-amber-500" padding="p-6">
-                    <div className="flex items-center gap-3 text-amber-500 mb-2">
-                      <TrendingDown size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Salidas / Gastos</span>
+                  <Card className="p-3 sm:p-6 border-l-[3px] sm:border-l-4 border-amber-500" padding="p-3 sm:p-6">
+                    <div className="flex items-center gap-1.5 sm:gap-3 text-amber-500 mb-1 sm:mb-2">
+                      <TrendingDown size={12} className="sm:w-[16px] sm:h-[16px]" />
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest">Salidas / Gastos</span>
                     </div>
-                    <h3 className="text-3xl font-sans font-extrabold tracking-tight text-text-main">${corte?.total_expenses.toFixed(2)}</h3>
+                    <h3 className="text-xl sm:text-3xl font-sans font-extrabold tracking-tight text-text-main truncate">${corte?.total_expenses.toFixed(2)}</h3>
                   </Card>
 
-                  <Card className="p-6 border-l-4 border-text-main bg-bg-card" padding="p-6">
-                    <div className="flex items-center gap-3 text-text-muted mb-2">
-                      <Calculator size={16} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Esperado en Caja</span>
+                  <Card className="p-3 sm:p-6 border-l-[3px] sm:border-l-4 border-text-main bg-bg-card" padding="p-3 sm:p-6">
+                    <div className="flex items-center gap-1.5 sm:gap-3 text-text-muted mb-1 sm:mb-2">
+                      <Calculator size={12} className="sm:w-[16px] sm:h-[16px]" />
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest">Esperado en Caja</span>
                     </div>
-                    <h3 className="text-3xl font-sans font-extrabold tracking-tight text-brand">${corte?.expected_cash_in_drawer.toFixed(2)}</h3>
+                    <h3 className="text-xl sm:text-3xl font-sans font-extrabold tracking-tight text-brand truncate">${corte?.expected_cash_in_drawer.toFixed(2)}</h3>
                   </Card>
                 </div>
 

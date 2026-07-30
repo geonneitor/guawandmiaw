@@ -43,20 +43,20 @@ const StatsWidget = ({ stats, onIgnoreAlert }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: 'Ventas Hoy', value: stats?.daily_total || 0, icon: TrendingUp, bg: 'bg-[#FFF0F0]', color: 'text-[#C62828]' },
           { label: 'Transacciones', value: stats?.transaction_count || 0, icon: Clock, bg: 'bg-[#F4BFBF]/30', color: 'text-[#C62828]' },
           { label: 'Alertas Stock', value: stats?.low_stock_products?.length || 0, icon: AlertTriangle, bg: 'bg-amber-50', color: 'text-amber-600', action: () => setShowLowStock(!showLowStock) },
         ].map((stat, i) => (
           <div key={i} onClick={stat.action} className={stat.action ? "cursor-pointer transition-transform active:scale-95" : ""}>
-            <Card className="flex items-center gap-4 p-6 border border-brand-light/30 shadow-lg shadow-brand/5 h-full" hover>
-              <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center ${stat.color}`}>
-                <stat.icon size={26} strokeWidth={2.5} />
+            <Card className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6 border border-brand-light/30 shadow-lg shadow-brand/5 h-full" hover>
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${stat.bg} flex items-center justify-center ${stat.color} shrink-0`}>
+                <stat.icon size={18} strokeWidth={2.5} className="sm:w-[26px] sm:h-[26px]" />
               </div>
-              <div>
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{stat.label}</p>
-                <p className="text-2xl font-black text-text-main leading-none">
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5 truncate">{stat.label}</p>
+                <p className="text-xl sm:text-2xl font-black text-text-main leading-none truncate">
                   {stat.label.includes('Ventas') || stat.label.includes('Ticket') ? '$' : ''}
                   <AnimatedNumber value={stat.value} />
                 </p>
@@ -307,12 +307,12 @@ const Dashboard = () => {
   return (
     <PageWrapper className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <img src={logo} alt="Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-md hover:scale-110 transition-transform duration-300" />
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold font-sans text-[#C62828] tracking-tight drop-shadow-sm">Panel de Control</h1>
-            <p className="text-text-muted font-bold">Sistema Central Guaw & Miaw 🐾</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Logo" className="w-12 h-12 md:w-20 md:h-20 object-contain drop-shadow-md hover:scale-110 transition-transform duration-300" />
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-4xl font-extrabold font-sans text-[#C62828] tracking-tight drop-shadow-sm truncate">Panel de Control</h1>
+            <p className="text-xs md:text-base text-text-muted font-bold">Sistema Central Guaw & Miaw 🐾</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -320,12 +320,14 @@ const Dashboard = () => {
             variant={isCustomizing ? 'primary' : 'secondary'} 
             icon={isCustomizing ? CheckCircle2 : Settings2}
             onClick={() => setIsCustomizing(!isCustomizing)}
+            size="sm"
           >
-            {isCustomizing ? 'Guardar Diseño' : 'Personalizar'}
+            {isCustomizing ? 'Guardar' : 'Personalizar'}
           </Button>
-          <div className="bg-white px-4 py-2 rounded-2xl soft-shadow border border-[#F4BFBF] flex items-center gap-2 text-[#C62828]">
-            <Calendar size={18} />
-            <span className="font-bold text-sm">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          <div className="bg-white px-3 py-1.5 rounded-2xl soft-shadow border border-[#F4BFBF] flex items-center gap-1.5 text-[#C62828]">
+            <Calendar size={16} />
+            <span className="font-bold text-[11px] hidden sm:inline">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            <span className="font-bold text-[11px] sm:hidden">{new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
           </div>
         </div>
       </div>

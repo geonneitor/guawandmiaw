@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   LayoutDashboard, 
@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Sparkles,
   Sun,
-  Moon
+  Moon,
+  MoreHorizontal,
+  X
 } from 'lucide-react'
 import { useUIStore } from '../store/useUIStore'
 import { useAuthStore } from '../store/useAuthStore'
@@ -167,6 +169,7 @@ const LiveClock = () => {
 const Sidebar = () => {
   const { sidebarOpen, toggleSidebar, darkMode, toggleDarkMode } = useUIStore()
   const { user, logout } = useAuthStore()
+  const location = useLocation()
  
   const menuGroups = [
     {
@@ -192,13 +195,57 @@ const Sidebar = () => {
     }
   ]
 
-  const mobileMenuItems = [
+  // Estado para el sheet "Más" en móvil — declarado después de todos los hooks
+  const [showMobileSheet, setShowMobileSheet] = useState(false)
+  const sheetRef = useRef(null)
+
+  // Cerrar sheet al navegar
+  useEffect(() => {
+    setShowMobileSheet(false)
+  }, [location.pathname])
+
+  // Cerrar sheet al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sheetRef.current && !sheetRef.current.contains(e.target)) {
+        setShowMobileSheet(false)
+      }
+    }
+    if (showMobileSheet) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showMobileSheet])
+
+  // Items principales que siempre se ven en la barra inferior
+  const primaryMobileItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Inicio', roles: [] },
     { to: '/pos',       icon: ShoppingCart,    label: 'Vender', roles: [] },
     { to: '/inventory', icon: Package,         label: 'Stock',  roles: ['admin', 'encargado'] },
-    { to: '/reports',   icon: BarChart3,       label: 'Reportes', roles: ['admin'] },
-    { to: '/settings',  icon: SettingsIcon,    label: 'Más',    roles: [] }
   ]
+
+  // Items secundarios que van en el sheet "Más"
+  const secondaryMobileItems = [
+    { to: '/corte',     icon: Calculator,      label: 'Finanzas',   roles: [] },
+    { to: '/sales',     icon: History,         label: 'Ventas',     roles: ['admin', 'encargado', 'cajero'] },
+    { to: '/reports',   icon: BarChart3,       label: 'Reportes',   roles: ['admin'] },
+    { to: '/clients',   icon: Users,           label: 'Clientes',   roles: ['admin', 'encargado'] },
+    { to: '/suppliers', icon: Truck,           label: 'Proveedores',roles: ['admin', 'encargado'] },
+    { to: '/expenses',  icon: Receipt,         label: 'Gastos',     roles: ['admin', 'encargado'] },
+    { to: '/settings',  icon: SettingsIcon,    label: 'Ajustes',    roles: [] },
+  ]
+
+  // Determinar si la ruta actual está en los items primarios
+  const isPrimaryActive = primaryMobileItems.some(item =>
+    location.pathname === item.to || location.pathname.startsWith(item.to + '/')
+  )
+  const isSecondaryActive = secondaryMobileItems.some(item =>
+    location.pathname === item.to || location.pathname.startsWith(item.to + '/')
+  )
  
   return (
     <>
@@ -298,22 +345,132 @@ const Sidebar = () => {
       </button>
     </motion.aside>
 
-    {/* Bottom Navigation para Móviles */}
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-bg-card/90 backdrop-blur-lg border-t border-border-subtle flex items-center justify-around z-50 print:hidden pb-safe">
-      {mobileMenuItems.map((item) => (
-        <RoleGuard key={item.to} roles={item.roles}>
-          <NavLink
-            to={item.to}
-            className={({ isActive }) => `
-              flex flex-col items-center justify-center w-full h-full p-2 transition-colors
-              ${isActive ? 'text-brand' : 'text-text-muted hover:text-brand'}
-            `}
-          >
-            <item.icon size={20} strokeWidth={2.5} />
-            <span className="text-[10px] font-bold mt-1 tracking-tight">{item.label}</span>
-          </NavLink>
-        </RoleGuard>
-      ))}
+    {/* ── Mobile Bottom Navigation ── */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 print:hidden pb-safe">
+      {/* Barra principal */}
+      <div className="flex items-center justify-around h-12 sm:h-14 bg-bg-card/95 backdrop-blur-2xl border-t border-border-subtle shadow-[0_-4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+        {primaryMobileItems.map((item) => (
+          <RoleGuard key={item.to} roles={item.roles}>
+            <NavLink
+              to={item.to}
+              className={({ isActive }) => `
+                flex flex-col items-center justify-center flex-1 h-full py-1 transition-all duration-200 relative
+                ${isActive ? 'text-brand' : 'text-text-muted hover:text-brand/70'}
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  {/* Indicador activo */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="mobilePill"
+                      className="absolute top-0 left-[20%] right-[20%] h-0.5 bg-brand rounded-full"
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className="mb-0.5" />
+                  <span className="text-[9px] font-bold tracking-tight hidden sm:block leading-none">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          </RoleGuard>
+        ))}
+
+        {/* Botón "Más" que abre el sheet */}
+        <button
+          onClick={() => setShowMobileSheet(!showMobileSheet)}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-all duration-200 relative ${
+            showMobileSheet || isSecondaryActive ? 'text-brand' : 'text-text-muted hover:text-brand/70'
+          }`}
+        >
+          {(showMobileSheet || isSecondaryActive) && (
+            <motion.div
+              layoutId="mobilePill"
+              className="absolute top-0 left-[20%] right-[20%] h-0.5 bg-brand rounded-full"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
+          <MoreHorizontal size={20} strokeWidth={showMobileSheet || isSecondaryActive ? 2.5 : 2} className="mb-0.5" />
+          <span className="text-[9px] font-bold tracking-tight hidden sm:block leading-none">Más</span>
+        </button>
+      </div>
+
+      {/* ── Sheet deslizable "Más" ── */}
+      <AnimatePresence>
+        {showMobileSheet && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+              onClick={() => setShowMobileSheet(false)}
+            />
+            
+            {/* Sheet */}
+            <motion.div
+              ref={sheetRef}
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              className="fixed bottom-12 sm:bottom-14 left-0 right-0 z-50 bg-bg-card rounded-t-[2.5rem] border-t border-border-subtle shadow-2xl pb-safe max-h-[70vh] overflow-hidden"
+            >
+              {/* Handle visual */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-border-accent" />
+              </div>
+
+              {/* Título */}
+              <div className="flex items-center justify-between px-6 py-3">
+                <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Más Opciones</h3>
+                <button
+                  onClick={() => setShowMobileSheet(false)}
+                  className="touch-target p-1.5 rounded-full hover:bg-bg-hover transition-colors text-text-muted"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="mx-6 border-t border-border-subtle" />
+
+              {/* Items del sheet */}
+              <div className="overflow-y-auto py-2 px-3 max-h-[calc(70vh-100px)] custom-scrollbar">
+                <div className="grid grid-cols-2 gap-1">
+                  {secondaryMobileItems.map((item) => (
+                    <RoleGuard key={item.to} roles={item.roles}>
+                      <NavLink
+                        to={item.to}
+                        onClick={() => setShowMobileSheet(false)}
+                        className={({ isActive }) => `
+                          flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200
+                          ${isActive
+                            ? 'bg-brand text-white shadow-md shadow-brand/20'
+                            : 'text-text-muted hover:bg-bg-hover hover:text-brand'
+                          }
+                        `}
+                      >
+                        <item.icon size={18} strokeWidth={2} />
+                        <span className="text-xs font-bold">{item.label}</span>
+                      </NavLink>
+                    </RoleGuard>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer del sheet */}
+              <div className="px-6 py-3 border-t border-border-subtle bg-bg-main/50">
+                <p className="text-[9px] text-text-muted font-medium text-center">
+                  Desliza hacia abajo para cerrar
+                </p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
     </>
   )

@@ -180,22 +180,22 @@ const POS = () => {
   const paymentLabel = { cash: 'Efectivo', card: 'Tarjeta', transfer: 'Transferencia' }
 
   return (
-    <PageWrapper className="h-[calc(100vh-120px)] md:h-[calc(100vh-64px)] flex flex-col">
-      {/* Mobile Tab Switcher */}
-      <div className="lg:hidden flex bg-bg-card/50 backdrop-blur-sm p-1.5 rounded-[1.5rem] border border-border-subtle shadow-sm mb-4 shrink-0">
+    <PageWrapper className="h-[calc(100vh-100px)] md:h-[calc(100vh-64px)] flex flex-col">
+      {/* Mobile Tab Switcher — más compacto */}
+      <div className="lg:hidden flex bg-bg-card/50 backdrop-blur-sm p-1 rounded-xl border border-border-subtle shadow-sm mb-3 shrink-0">
         <button 
           onClick={() => setMobileTab('catalog')}
-          className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${mobileTab === 'catalog' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+          className={`flex-1 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${mobileTab === 'catalog' ? 'bg-[#C62828] text-white shadow-md shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
         >
           Catálogo
         </button>
         <button 
           onClick={() => setMobileTab('cart')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${mobileTab === 'cart' ? 'bg-[#C62828] text-white shadow-lg shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${mobileTab === 'cart' ? 'bg-[#C62828] text-white shadow-md shadow-[#C62828]/20' : 'text-text-muted hover:text-[#C62828]'}`}
         >
           Carrito
           {items.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[10px] ${mobileTab === 'cart' ? 'bg-white text-[#C62828]' : 'bg-[#C62828] text-white'}`}>
+            <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${mobileTab === 'cart' ? 'bg-white text-[#C62828]' : 'bg-[#C62828] text-white'}`}>
               {items.length}
             </span>
           )}

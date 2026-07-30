@@ -80,9 +80,9 @@ const AppContent = () => {
       <Notifications />
       
       <main 
-        className={`transition-all duration-300 min-h-screen pb-20 md:pb-0 print:pl-0 ${(!isLoginPage && isAuthenticated) ? (sidebarOpen ? 'md:pl-[276px]' : 'md:pl-[104px]') : ''}`}
+        className={`transition-all duration-300 min-h-screen pb-12 sm:pb-14 md:pb-0 print:pl-0 ${(!isLoginPage && isAuthenticated) ? (sidebarOpen ? 'md:pl-[276px]' : 'md:pl-[104px]') : ''}`}
       >
-        <div className={!isLoginPage ? "max-w-[1600px] mx-auto p-4 md:p-8" : ""}>
+        <div className={!isLoginPage ? "max-w-[1600px] mx-auto p-3 md:p-8" : ""}>
           <Routes location={location} key={location.pathname}>
             <Route path="/login" element={<Login />} />
             
