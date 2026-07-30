@@ -5,7 +5,7 @@ import {
   Maximize2, Minimize2, RefreshCw, AlertTriangle,
   WifiOff
 } from 'lucide-react';
-import AnimatedMascot from './AnimatedMascot';
+import mascotaFrontal from '../assets/mascota-frontal.png';
 import { aiApi } from '../api/ai';
 import { useCartStore } from '../store/useCartStore';
 import { useNotificationStore } from '../store/useNotificationStore';
@@ -481,14 +481,44 @@ const AIAssistantWidget = () => {
               />
 
               <div className="flex items-center gap-2 sm:gap-3 relative z-10 flex-1 min-w-0">
-                {/* Avatar gato animado */}
-                <AnimatedMascot
-                  skin={skin.id}
-                  isSpeaking={isLoading}
-                  isThinking={chilitaiThinking || (skin.id === 'chilitit' && isLoading)}
-                  size="md"
-                  className="shrink-0"
-                />
+                {/* Avatar gato con animaciones vitales */}
+                <div className="relative shrink-0">
+                  {/* Glow al hablar */}
+                  {isLoading && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{
+                        boxShadow: [
+                          `0 0 0 0 ${skin.id === 'figaro' ? 'rgba(198,40,40,0.3)' : 'rgba(107,114,128,0.3)'}`,
+                          `0 0 0 12px ${skin.id === 'figaro' ? 'rgba(198,40,40,0)' : 'rgba(107,114,128,0)'}`,
+                        ],
+                      }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    />
+                  )}
+                  {/* Gato con respiración y flotación */}
+                  <motion.div
+                    animate={{
+                      y: skin.id === 'chilitit' ? [-2, 4, -2] : [-3, 3, -3],
+                      rotate: skin.id === 'chilitit' ? [-2, 3, -2] : [-1, 1, -1],
+                      scale: isLoading ? [1, 1.02, 1] : [1, 1.005, 1],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: skin.id === 'chilitit' ? 2.5 : 3.5,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    <img
+                      src={mascotaFrontal}
+                      alt={skin.name}
+                      className="w-10 h-10 sm:w-14 sm:h-14 object-contain drop-shadow-lg"
+                      style={{
+                        filter: (skin.filterStyle?.filter || '') + ' drop-shadow(0 4px 8px rgba(0,0,0,0.25))',
+                      }}
+                    />
+                  </motion.div>
+                </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -709,14 +739,30 @@ const AIAssistantWidget = () => {
               style={{ filter: 'blur(6px)' }}
             />
 
-            {/* El gato animado */}
-            <AnimatedMascot
-              skin={skin.id}
-              isThinking={false}
-              isSpeaking={false}
-              size="lg"
+            {/* El gato con animación vital */}
+            <motion.div
               className="relative z-10"
-            />
+              animate={{
+                y: skin.id === 'chilitit' ? [-3, 6, -3] : [-4, 4, -4],
+                rotate: skin.id === 'chilitit' ? [-2, 4, -2] : [-1, 1, -1],
+                scale: [1, 1.015, 1],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: skin.id === 'chilitit' ? 2 : 3,
+                ease: 'easeInOut',
+              }}
+            >
+              <img
+                src={mascotaFrontal}
+                alt={skin.name}
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-xl"
+                style={{
+                  ...(skin.filterStyle || {}),
+                  filter: (skin.filterStyle?.filter || '') + ' drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
+                }}
+              />
+            </motion.div>
 
             {/* Badge */}
             <div
