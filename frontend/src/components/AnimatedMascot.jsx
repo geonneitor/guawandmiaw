@@ -89,9 +89,8 @@ const CX = 120, CY = 110;
 
 /* ─── Helper: dibuja ojo almendrado de gato ─────────────────────────────── */
 const CatEye = ({ cx, cy, isLeft, colors, isClosed, isSurprised }) => {
-  const w = 26, h = 18; // tamaño base del ojo
-  const tilt = isLeft ? -0.15 : 0.15; // inclinación
-  const rot = isLeft ? -8 : 8; // rotación en grados
+  const w = 26, h = 18;
+  const rot = isLeft ? -8 : 8;
 
   if (isSurprised) {
     return (
@@ -248,11 +247,11 @@ const AnimatedMascot = ({
 
             {/* ═══════════════ OJOS ALMENDRADOS ══════════════════════════════ */}
             {isChili && isThinking ? (
-              /* ChilitAI pensando — ojos entrecerrados */
-              <>
+              /* ChilitAI pensando — ojos bizcos/entrecerrados con shake */
+              <g style={{ animation: 'gm-chilitit-shake 3s ease-in-out infinite' }}>
                 <CatEye cx={CX-24} cy={CY-12} colors={c} isClosed={true} isLeft={true} />
-                <CatEye cx={CX+24} cy={CY-12} colors={c} isClosed={false} isLeft={false} />
-              </>
+                <CatEye cx={CX+24} cy={CY-12} colors={c} isClosed={true} isLeft={false} />
+              </g>
             ) : (
               <g style={{ animation: isChili ? 'gm-blink-slow 4s ease-in-out infinite, gm-chilitit-shake 3s ease-in-out infinite' : 'gm-blink 3.8s ease-in-out infinite' }}>
                 <CatEye cx={CX-24} cy={CY-12} colors={c} isLeft={true} isSurprised={isSurprised} />
@@ -278,7 +277,7 @@ const AnimatedMascot = ({
             )}
 
             {/* ── LINEA DE NARIZ A BOCA ────────────────────────────── */}
-            <line x1={CX} y1={CY+14} x2={CX} y2={CY+16} stroke={c.mouth} strokeWidth="1.5" strokeLinecap="round" />
+            <line x1={CX} y1={CY+14} x2={CX} y2={CY+18} stroke={c.mouth} strokeWidth="1.5" strokeLinecap="round" />
 
             {/* ═══════════════ BIGOTES ══════════════════════════════════════ */}
             <g opacity="0.5">
