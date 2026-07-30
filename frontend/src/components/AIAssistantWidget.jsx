@@ -485,7 +485,7 @@ const AIAssistantWidget = () => {
                 <AnimatedMascot
                   skin={skin.id}
                   isSpeaking={isLoading}
-                  isThinking={chilitaiThinking || skin.id === 'chilitit' && isLoading}
+                  isThinking={chilitaiThinking || (skin.id === 'chilitit' && isLoading)}
                   size="md"
                   className="shrink-0"
                 />

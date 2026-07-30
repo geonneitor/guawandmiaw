@@ -2,141 +2,137 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COLOR SCHEMES
+// SCHEMES — Figaro: gato negro con blanco  |  ChilitAI: gato gris tabby
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const COLORS = {
   figaro: {
-    fur: '#2D2D2D',
-    furLight: '#4A4A4A',
-    furDark: '#1A1A1A',
-    innerEar: '#FFB0B0',
-    nose: '#FF8A8A',
-    eyeWhite: '#FFFFFF',
-    iris: '#FFD700',
-    pupil: '#1A1A1A',
-    eyeHighlight: '#FFF8DC',
-    whisker: '#666666',
-    collar: '#C62828',
-    collarAccent: '#FFD700',
-    mouth: '#FF6B6B',
-    tongue: '#FF8A8A',
-    blush: 'rgba(255, 107, 107, 0.15)',
-    shadow: 'rgba(0,0,0,0.2)',
-    glow: 'rgba(198,40,40,0.3)',
+    fur:       '#2B2B2B',  // negro azabache
+    furLight:  '#4A4A4A',
+    furDark:   '#1A1A1A',
+    furWhite:  '#FFFFFF',
+    innerEar:  '#F5A0A0',
+    nose:      '#FF6B6B',
+    eyeWhite:  '#FFFFFF',
+    iris:      '#F5C842',  // amarillo dorado
+    pupil:     '#1A1A1A',
+    eyeLine:   '#1A1A1A',
+    whisker:   '#888888',
+    collar:    '#C62828',
+    collarTag: '#FFD700',
+    mouth:     '#FF6B6B',
+    tongue:    '#FF8A8A',
+    glow:      'rgba(198,40,40,0.3)',
   },
   chilitit: {
-    fur: '#8B8B8B',
-    furLight: '#A0A0A0',
-    furDark: '#6B6B6B',
-    innerEar: '#D4D4D4',
-    nose: '#B0B0B0',
-    eyeWhite: '#F5F5F5',
-    iris: '#9CA3AF',
-    pupil: '#374151',
-    eyeHighlight: '#E5E7EB',
-    whisker: '#999999',
-    collar: '#6B7280',
-    collarAccent: '#D1D5DB',
-    mouth: '#9CA3AF',
-    tongue: '#B0B0B0',
-    blush: 'rgba(156, 163, 175, 0.12)',
-    shadow: 'rgba(0,0,0,0.15)',
-    glow: 'rgba(107,114,128,0.3)',
+    fur:       '#8C8C8C',  // gris medio
+    furLight:  '#A8A8A8',
+    furDark:   '#6B6B6B',
+    furWhite:  '#D4D4D4',
+    innerEar:  '#C8C8C8',
+    nose:      '#B0B0B0',
+    eyeWhite:  '#F0F0F0',
+    iris:      '#9CA3AF',
+    pupil:     '#374151',
+    eyeLine:   '#374151',
+    whisker:   '#999999',
+    collar:    '#6B7280',
+    collarTag: '#D1D5DB',
+    mouth:     '#9CA3AF',
+    tongue:    '#B0B0B0',
+    glow:      'rgba(107,114,128,0.3)',
   },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SVG DIMENSIONS (viewBox 0 0 200 200)
+// CSS KEYFRAMES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const CX = 100; // center X
-const CY = 100; // center Y
-const HEAD_R = 55; // head radius
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// BLINK ANIMATION (CSS keyframes)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const blinkKeyframes = `
-@keyframes cat-blink {
-  0%, 96%, 100% { transform: scaleY(1); }
-  97% { transform: scaleY(0.05); }
-  99% { transform: scaleY(0.05); }
+const keyframesCSS = `
+@keyframes gm-blink {
+  0%, 95%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+  98% { transform: scaleY(0.1); }
 }
-
-@keyframes cat-blink-slow {
-  0%, 98.5%, 100% { transform: scaleY(1); }
-  99% { transform: scaleY(0.05); }
-  99.5% { transform: scaleY(0.05); }
+@keyframes gm-blink-slow {
+  0%, 97.5%, 100% { transform: scaleY(1); }
+  98% { transform: scaleY(0.1); }
+  99.5% { transform: scaleY(0.1); }
 }
-
-@keyframes cat-breathe {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-2px) scale(1.008); }
+@keyframes gm-ear-left {
+  0%, 85%, 100% { transform: rotate(0deg); }
+  87% { transform: rotate(-4deg); }
+  89% { transform: rotate(2deg); }
+  91% { transform: rotate(-1deg); }
 }
-
-@keyframes ear-twitch-left {
-  0%, 90%, 100% { transform: rotate(0deg); }
-  92% { transform: rotate(-5deg); }
-  94% { transform: rotate(3deg); }
-  96% { transform: rotate(-2deg); }
+@keyframes gm-ear-right {
+  0%, 82%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(4deg); }
+  86% { transform: rotate(-2deg); }
+  88% { transform: rotate(1deg); }
 }
-
-@keyframes ear-twitch-right {
-  0%, 88%, 100% { transform: rotate(0deg); }
-  90% { transform: rotate(5deg); }
-  92% { transform: rotate(-3deg); }
-  94% { transform: rotate(2deg); }
-}
-
-@keyframes whisker-twitch-left {
-  0%, 95%, 100% { transform: rotate(0deg); }
-  97% { transform: rotate(-2deg); }
-}
-
-@keyframes whisker-twitch-right {
-  0%, 93%, 100% { transform: rotate(0deg); }
-  95% { transform: rotate(2deg); }
-}
-
-@keyframes chilitit-shake {
-  0%, 100% { transform: translateX(0) rotate(0deg); }
-  15% { transform: translateX(-1px) rotate(-1deg); }
-  30% { transform: translateX(1px) rotate(1deg); }
-  45% { transform: translateX(-0.5px) rotate(-0.5deg); }
-  60% { transform: translateX(0.5px) rotate(0.5deg); }
-}
-
-@keyframes chilitit-dizzy {
-  0% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-2deg) scale(1.02); }
-  50% { transform: rotate(0deg) scale(1); }
-  75% { transform: rotate(2deg) scale(0.98); }
-  100% { transform: rotate(0deg) scale(1); }
-}
-
-@keyframes tail-sway {
-  0%, 100% { transform: rotate(-10deg); }
-  50% { transform: rotate(10deg); }
-}
-
-@keyframes surprise-pop {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.15); }
-  60% { transform: scale(0.95); }
-  100% { transform: scale(1); }
-}
-
-@keyframes sparkle-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
-  50% { opacity: 0.8; }
-  100% { transform: translateY(-20px) rotate(180deg); opacity: 0; }
+@keyframes gm-chilitit-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-1.5px) rotate(-0.8deg); }
+  40% { transform: translateX(1.5px) rotate(0.8deg); }
+  60% { transform: translateX(-0.8px) rotate(-0.4deg); }
+  80% { transform: translateX(0.8px) rotate(0.4deg); }
 }
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPONENTE PRINCIPAL
+// SVG GEOMETRY  — viewBox 0 0 240 240, centro ~(120,120)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const S = { viewW: 240, viewH: 240 };
+const CX = 120, CY = 110;
+
+/* ─── Helper: dibuja ojo almendrado de gato ─────────────────────────────── */
+const CatEye = ({ cx, cy, isLeft, colors, isClosed, isSurprised }) => {
+  const w = 26, h = 18; // tamaño base del ojo
+  const tilt = isLeft ? -0.15 : 0.15; // inclinación
+  const rot = isLeft ? -8 : 8; // rotación en grados
+
+  if (isSurprised) {
+    return (
+      <g transform={`translate(${cx},${cy})`}>
+        <circle r={16} fill={colors.eyeWhite} stroke={colors.eyeLine} strokeWidth="2" />
+        <circle r={9} fill={colors.iris} />
+        <circle r={5} fill={colors.pupil} />
+        <circle cx={-4} cy={-5} r={3} fill="#FFF" opacity="0.8" />
+      </g>
+    );
+  }
+
+  if (isClosed) {
+    return (
+      <g transform={`translate(${cx},${cy}) rotate(${rot})`}>
+        <path d={`M${-w/2},0 Q0,${h/3} ${w/2},0`} fill="none" stroke={colors.eyeLine} strokeWidth="2.5" strokeLinecap="round" />
+      </g>
+    );
+  }
+
+  return (
+    <g transform={`translate(${cx},${cy}) rotate(${rot})`}>
+      {/* Blanco */}
+      <path d={`M${-w/2},0 C${-w/2},${-h} ${-w/4},${-h} 0,${-h} C${w/4},${-h} ${w/2},${-h} ${w/2},0 C${w/2},${h} ${w/4},${h} 0,${h} C${-w/4},${h} ${-w/2},${h} ${-w/2},0Z`}
+        fill={colors.eyeWhite} stroke={colors.eyeLine} strokeWidth="2" />
+      {/* Iris */}
+      <path d={`M${-w/2+4},${-1} C${-w/2+4},${-h+6} ${-w/4},${-h+4} 0,${-h+4} C${w/4},${-h+4} ${w/2-4},${-h+6} ${w/2-4},${-1} C${w/2-4},${h-6} ${w/4},${h-4} 0,${h-4} C${-w/4},${h-4} ${-w/2+4},${h-6} ${-w/2+4},${-1}Z`}
+        fill={colors.iris} />
+      {/* Pupila — vertical/elíptica como los gatos */}
+      <ellipse cx={0} cy={0} rx={5} ry={11} fill={colors.pupil} />
+      {/* Brillo */}
+      <ellipse cx={-5} cy={-7} rx={4} ry={3} fill="#FFF" opacity="0.7" />
+      {/* Delineado superior reforzado */}
+      <path d={`M${-w/2-2},${-2} Q${-w/2},${-h-2} 0,${-h-3} Q${w/2},${-h-2} ${w/2+2},${-2}`}
+        fill="none" stroke={colors.eyeLine} strokeWidth="2.5" strokeLinecap="round" />
+    </g>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMPONENTE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const AnimatedMascot = ({
@@ -148,413 +144,206 @@ const AnimatedMascot = ({
 }) => {
   const [isPet, setIsPet] = useState(false);
   const [isSurprised, setIsSurprised] = useState(false);
-  const colors = COLORS[skin] || COLORS.figaro;
-  const isChilitit = skin === 'chilitit';
+  const c = COLORS[skin] || COLORS.figaro;
+  const isChili = skin === 'chilitit';
 
-  // ── Tamaños responsivos ──────────────────────────────────────────────────
-  const sizes = {
-    sm: { w: 40, h: 40, svgScale: 0.4 },
-    md: { w: 56, h: 56, svgScale: 0.56 },
-    lg: { w: 72, h: 72, svgScale: 0.72 },
-    xl: { w: 96, h: 96, svgScale: 0.96 },
+  // ── Tamaños ──────────────────────────────────────────────────────────────
+  const dims = {
+    sm: 40, md: 56, lg: 80, xl: 100,
   };
-  const dim = sizes[size] || sizes.md;
+  const px = dims[size] || dims.md;
 
-  // ── Click / Pet handler ──────────────────────────────────────────────────
+  // ── Click / Pet ───────────────────────────────────────────────────────────
   const handlePet = useCallback(() => {
     setIsSurprised(true);
     setIsPet(true);
-    setTimeout(() => {
-      setIsSurprised(false);
-      setTimeout(() => setIsPet(false), 300);
-    }, 600);
+    setTimeout(() => { setIsSurprised(false); setTimeout(() => setIsPet(false), 300); }, 600);
   }, []);
 
-  // ── Ejes de animación ────────────────────────────────────────────────────
-  const floatAnim = isChilitit
-    ? { y: [-2, 4, -2], rotate: [-2, 3, -2] }
+  const floatAnim = isChili
+    ? { y: [-2, 5, -2], rotate: [-2, 3, -2] }
     : { y: [-3, 3, -3], rotate: [-1, 1, -1] };
-
-  const floatDur = isChilitit ? 2.5 : 3.5;
 
   return (
     <>
-      <style>{blinkKeyframes}</style>
+      <style>{keyframesCSS}</style>
       <motion.div
-        className={`relative inline-flex items-center justify-center shrink-0 cursor-pointer ${className}`}
-        style={{ width: dim.w, height: dim.h }}
-        animate={
-          isSurprised
-            ? { scale: [1, 1.12, 0.95, 1], rotate: [0, -2, 2, 0] }
-            : isPet
-              ? { scale: [1, 0.98, 1.02, 1] }
-              : floatAnim
-        }
-        transition={{
-          duration: isSurprised ? 0.5 : floatDur,
-          repeat: isSurprised ? 0 : Infinity,
-          ease: 'easeInOut',
-        }}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
+        className={`relative inline-flex items-center justify-center shrink-0 cursor-pointer select-none ${className}`}
+        style={{ width: px, height: px }}
+        animate={isSurprised
+          ? { scale: [1, 1.15, 0.95, 1], rotate: [0, -3, 3, 0] }
+          : isPet
+            ? { scale: [1, 0.97, 1.03, 1] }
+            : floatAnim}
+        transition={{ duration: isSurprised ? 0.5 : (isChili ? 2.5 : 3.5), repeat: isSurprised ? 0 : Infinity, ease: 'easeInOut' }}
+        whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
         onClick={handlePet}
-        title={isChilitit ? '🐈 Haz clic para molestar a Chilitit' : '🐾 Haz clic para acariciar a Fígaro'}
+        title={isChili ? '🐈 Haz clic para molestar a Chilitit' : '🐾 Haz clic para acariciar a Fígaro'}
       >
-        <svg
-          viewBox="0 0 200 200"
-          width={dim.w}
-          height={dim.h}
-          className="overflow-visible drop-shadow-lg"
-          style={{ filter: isChilitit ? 'grayscale(100%) brightness(1.1) contrast(0.9)' : 'none' }}
-        >
-          {/* ── GLOW ─────────────────────────────────────────────────────── */}
-          {isSpeaking && (
-            <circle
-              cx={CX}
-              cy={CY + 20}
-              r={HEAD_R + 15}
-              fill="none"
-              stroke={colors.glow}
-              strokeWidth="3"
-              opacity="0.5"
-            >
-              <animate attributeName="r" values={`${HEAD_R + 10};${HEAD_R + 20};${HEAD_R + 10}`} dur="1.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-          )}
+        <svg viewBox={`0 0 ${S.viewW} ${S.viewH}`} width={px} height={px} className="overflow-visible drop-shadow-lg">
+          <defs>
+            <filter id="shadow-cat">
+              <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.2" />
+            </filter>
+          </defs>
 
-          {/* ── BODY ─────────────────────────────────────────────────────── */}
-          <ellipse cx={CX} cy={CY + 55} rx={45} ry={35} fill={colors.furLight} opacity="0.3" />
-          <ellipse cx={CX} cy={CY + 52} rx={38} ry={28} fill={colors.fur} opacity="0.4" />
+          <g filter="url(#shadow-cat)">
+            {/* ═══════════════ BODY (semioculto tras la cabeza) ═══════════════ */}
+            <ellipse cx={CX} cy={CY + 70} rx={50} ry={36} fill={c.fur} opacity="0.35" />
 
-          {/* ── COLLAR ───────────────────────────────────────────────────── */}
-          <path
-            d={`M${CX - 25},${CY + 25} Q${CX},${CY + 38} ${CX + 25},${CY + 25}`}
-            fill="none"
-            stroke={colors.collar}
-            strokeWidth="5"
-            strokeLinecap="round"
-          />
-          {/* Collar charm */}
-          <circle cx={CX} cy={CY + 35} r={5} fill={colors.collarAccent}>
-            {isChilitit && (
-              <animate attributeName="cy" values={`${CY + 35};${CY + 38};${CY + 35}`} dur="1s" repeatCount="indefinite" />
+            {/* ═══════════════ PECHA BLANCA (Figaro) ══════════════════════════ */}
+            <path d={`M${CX-30},${CY+20} Q${CX},${CY+50} ${CX+30},${CY+20} Q${CX},${CY+60} ${CX-30},${CY+20}Z`}
+              fill={c.furWhite} opacity={skin === 'figaro' ? 0.6 : 0.15} />
+
+            {/* ═══════════════ COLLAR ════════════════════════════════════════ */}
+            <path d={`M${CX-30},${CY+30} Q${CX},${CY+42} ${CX+30},${CY+30}`} fill="none" stroke={c.collar} strokeWidth="6" strokeLinecap="round" />
+            {/* Medalla */}
+            <circle cx={CX} cy={CY + 40} r={7} fill={c.collarTag} stroke={c.collar} strokeWidth="1.5" />
+            <text x={CX} y={CY + 44} textAnchor="middle" fontSize="10" fill={skin === 'figaro' ? '#FFF' : '#374151'} fontWeight="bold">
+              {isChili ? '?' : '★'}
+            </text>
+
+            {/* ═══════════════ OREJAS ════════════════════════════════════════ */}
+            {/* Izquierda */}
+            <g style={{ transformOrigin: `${CX-48}px ${CY-50}px`, animation: isChili ? 'none' : 'gm-ear-left 4s ease-in-out infinite' }}>
+              <polygon points={`${CX-55},${CY-10} ${CX-32},${CY-80} ${CX-10},${CY-32}`} fill={c.fur} stroke={c.furDark} strokeWidth="2" strokeLinejoin="round" />
+              <polygon points={`${CX-48},${CY-16} ${CX-35},${CY-68} ${CX-18},${CY-34}`} fill={c.innerEar} opacity="0.6" />
+            </g>
+            {/* Derecha */}
+            <g style={{ transformOrigin: `${CX+48}px ${CY-50}px`, animation: isChili ? 'none' : 'gm-ear-right 4.2s ease-in-out infinite' }}>
+              <polygon points={`${CX+55},${CY-10} ${CX+32},${CY-80} ${CX+10},${CY-32}`} fill={c.fur} stroke={c.furDark} strokeWidth="2" strokeLinejoin="round" />
+              <polygon points={`${CX+48},${CY-16} ${CX+35},${CY-68} ${CX+18},${CY-34}`} fill={c.innerEar} opacity="0.6" />
+            </g>
+
+            {/* ═══════════════ CABEZA (cara de gato con barbilla) ════════════ */}
+            <path d={`
+              M${CX-62},${CY-18}
+              C${CX-68},${CY-36} ${CX-56},${CY-58} ${CX-38},${CY-67}
+              C${CX-24},${CY-74} ${CX+24},${CY-74} ${CX+38},${CY-67}
+              C${CX+56},${CY-58} ${CX+68},${CY-36} ${CX+62},${CY-18}
+              C${CX+64},${CY-4} ${CX+58},${CY+16} ${CX+44},${CY+30}
+              C${CX+34},${CY+40} ${CX+18},${CY+48} ${CX},${CY+48}
+              C${CX-18},${CY+48} ${CX-34},${CY+40} ${CX-44},${CY+30}
+              C${CX-58},${CY+16} ${CX-64},${CY-4} ${CX-62},${CY-18}Z
+            `} fill={c.fur} stroke={c.furDark} strokeWidth="2" />
+
+            {/* ── MEJILLAS ──────────────────────────────────────────── */}
+            <ellipse cx={CX-34} cy={CY+8} rx={18} ry={13} fill={c.furWhite} opacity={skin === 'figaro' ? 0.5 : 0.12} />
+            <ellipse cx={CX+34} cy={CY+8} rx={18} ry={13} fill={c.furWhite} opacity={skin === 'figaro' ? 0.5 : 0.12} />
+
+            {/* ── HOCICO (morro blanco) ─────────────────────────────── */}
+            <path d={`
+              M${CX-18},${CY+10}
+              Q${CX-22},${CY+22} ${CX-12},${CY+32}
+              Q${CX},${CY+36} ${CX+12},${CY+32}
+              Q${CX+22},${CY+22} ${CX+18},${CY+10}
+              Q${CX},${CY+6} ${CX-18},${CY+10}Z
+            `} fill={c.furWhite} opacity={skin === 'figaro' ? 0.7 : 0.2} />
+
+            {/* ── MANCHITA EN FRENTE (ChilitAI = rayas tabby) ──────── */}
+            {isChili && (
+              <path d={`M${CX-8},${CY-62} L${CX},${CY-54} L${CX+8},${CY-62} M${CX-5},${CY-58} L${CX},${CY-50} L${CX+5},${CY-58}`}
+                stroke={c.furDark} strokeWidth="1.8" fill="none" opacity="0.35" strokeLinecap="round" />
             )}
-          </circle>
-          <text
-            x={CX}
-            y={CY + 37}
-            textAnchor="middle"
-            fontSize="6"
-            fill={isChilitit ? '#374151' : '#FFF'}
-            fontWeight="bold"
-          >
-            {isChilitit ? '?' : '★'}
-          </text>
 
-          {/* ── LEFT EAR ─────────────────────────────────────────────────── */}
-          <g style={{ transformOrigin: `${CX - 35}px ${CY - 30}px`, animation: isChilitit ? 'none' : `ear-twitch-left 4s ease-in-out infinite` }}>
-            <polygon
-              points={`${CX - 42},${CY - 12} ${CX - 22},${CY - 52} ${CX - 8},${CY - 28}`}
-              fill={colors.fur}
-              stroke={colors.furDark}
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points={`${CX - 36},${CY - 16} ${CX - 24},${CY - 44} ${CX - 14},${CY - 28}`}
-              fill={colors.innerEar}
-              opacity="0.7"
-            />
-          </g>
-
-          {/* ── RIGHT EAR ────────────────────────────────────────────────── */}
-          <g style={{ transformOrigin: `${CX + 35}px ${CY - 30}px`, animation: isChilitit ? 'none' : `ear-twitch-right 4.5s ease-in-out infinite` }}>
-            <polygon
-              points={`${CX + 42},${CY - 12} ${CX + 22},${CY - 52} ${CX + 8},${CY - 28}`}
-              fill={colors.fur}
-              stroke={colors.furDark}
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points={`${CX + 36},${CY - 16} ${CX + 24},${CY - 44} ${CX + 14},${CY - 28}`}
-              fill={colors.innerEar}
-              opacity="0.7"
-            />
-          </g>
-
-          {/* ── HEAD (FACE) ──────────────────────────────────────────────── */}
-          <ellipse
-            cx={CX}
-            cy={CY - 5}
-            rx={HEAD_R}
-            ry={HEAD_R - 5}
-            fill={colors.fur}
-            stroke={colors.furDark}
-            strokeWidth="2"
-          />
-
-          {/* ── CHEEKS (FAT CAT CHEEKS) ──────────────────────────────────── */}
-          <ellipse cx={CX - 32} cy={CY + 5} rx={18} ry={14} fill={colors.furLight} opacity="0.7" />
-          <ellipse cx={CX + 32} cy={CY + 5} rx={18} ry={14} fill={colors.furLight} opacity="0.7" />
-
-          {/* ── BLUSH ────────────────────────────────────────────────────── */}
-          <circle cx={CX - 30} cy={CY + 8} r={8} fill={colors.blush} />
-          <circle cx={CX + 30} cy={CY + 8} r={8} fill={colors.blush} />
-
-          {/* ── FOREHEAD MARKINGS ────────────────────────────────────────── */}
-          {isChilitit ? (
-            <path
-              d={`M${CX},${CY - 38} L${CX - 5},${CY - 45} M${CX},${CY - 38} L${CX + 5},${CY - 45} M${CX - 5},${CY - 42} L${CX + 5},${CY - 42}`}
-              stroke={colors.furLight}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              fill="none"
-              opacity="0.6"
-            />
-          ) : (
-            <path
-              d={`M${CX - 3},${CY - 40} Q${CX},${CY - 48} ${CX + 3},${CY - 40}`}
-              stroke={colors.furDark}
-              strokeWidth="1.5"
-              fill="none"
-              opacity="0.4"
-            />
-          )}
-
-          {/* ── EYES ────────────────────────────────────────────────────────
-              Cada ojo tiene: blanco → iris → pupila → brillo
-              El parpadeo se logra con scaleY en el grupo del ojo completo
-          ────────────────────────────────────────────────────────────────── */}
-
-          {/* LEFT EYE */}
-          <g
-            style={{
-              transformOrigin: `${CX - 18}px ${CY - 8}px`,
-              animation: isChilitit
-                ? `cat-blink-slow 3.5s ease-in-out infinite, ${isThinking ? 'chilitit-shake 0.5s ease-in-out infinite' : ''}`
-                : `cat-blink 4s ease-in-out infinite`,
-            }}
-          >
-            <ellipse cx={CX - 18} cy={CY - 8} rx={13} ry={14} fill={colors.eyeWhite} />
-            <ellipse cx={CX - 18} cy={CY - 8} rx={9} ry={10} fill={colors.iris} />
-            <ellipse cx={CX - 16} cy={CY - 5} rx={4} ry={4} fill={colors.pupil} />
-            <ellipse cx={CX - 21} cy={CY - 13} rx={4} ry={3} fill={colors.eyeHighlight} opacity="0.8" />
-            {/* Eye outline */}
-            <ellipse cx={CX - 18} cy={CY - 8} rx={13} ry={14} fill="none" stroke={colors.furDark} strokeWidth="1.5" />
-          </g>
-
-          {/* RIGHT EYE */}
-          <g
-            style={{
-              transformOrigin: `${CX + 18}px ${CY - 8}px`,
-              animation: isChilitit
-                ? `cat-blink-slow 3.5s ease-in-out infinite`
-                : `cat-blink 4.2s ease-in-out infinite`,
-            }}
-          >
-            <ellipse cx={CX + 18} cy={CY - 8} rx={13} ry={14} fill={colors.eyeWhite} />
-            <ellipse cx={CX + 18} cy={CY - 8} rx={9} ry={10} fill={colors.iris} />
-            <ellipse cx={CX + 20} cy={CY - 5} rx={4} ry={4} fill={colors.pupil} />
-            <ellipse cx={CX + 15} cy={CY - 13} rx={4} ry={3} fill={colors.eyeHighlight} opacity="0.8" />
-            <ellipse cx={CX + 18} cy={CY - 8} rx={13} ry={14} fill="none" stroke={colors.furDark} strokeWidth="1.5" />
-          </g>
-
-          {/* ── SURPRISE EYES (when clicked) ─────────────────────────────── */}
-          <AnimatePresence>
-            {isSurprised && (
-              <g>
-                <circle cx={CX - 18} cy={CY - 8} r={16} fill="white" stroke={colors.furDark} strokeWidth="1.5" />
-                <circle cx={CX - 18} cy={CY - 8} r={10} fill={colors.iris} />
-                <circle cx={CX - 18} cy={CY - 8} r={6} fill={colors.pupil} />
-                <circle cx={CX + 18} cy={CY - 8} r={16} fill="white" stroke={colors.furDark} strokeWidth="1.5" />
-                <circle cx={CX + 18} cy={CY - 8} r={10} fill={colors.iris} />
-                <circle cx={CX + 18} cy={CY - 8} r={6} fill={colors.pupil} />
+            {/* ═══════════════ OJOS ALMENDRADOS ══════════════════════════════ */}
+            {isChili && isThinking ? (
+              /* ChilitAI pensando — ojos entrecerrados */
+              <>
+                <CatEye cx={CX-24} cy={CY-12} colors={c} isClosed={true} isLeft={true} />
+                <CatEye cx={CX+24} cy={CY-12} colors={c} isClosed={false} isLeft={false} />
+              </>
+            ) : (
+              <g style={{ animation: isChili ? 'gm-blink-slow 4s ease-in-out infinite, gm-chilitit-shake 3s ease-in-out infinite' : 'gm-blink 3.8s ease-in-out infinite' }}>
+                <CatEye cx={CX-24} cy={CY-12} colors={c} isLeft={true} isSurprised={isSurprised} />
+                <CatEye cx={CX+24} cy={CY-12} colors={c} isLeft={false} isSurprised={isSurprised} />
               </g>
             )}
-          </AnimatePresence>
 
-          {/* ── NOSE ──────────────────────────────────────────────────────── */}
-          <path
-            d={`M${CX - 4},${CY + 2} Q${CX},${CY + 6} ${CX + 4},${CY + 2} Q${CX},${CY + 1} ${CX - 4},${CY + 2}Z`}
-            fill={colors.nose}
-          />
+            {/* ═══════════════ NARIZ (triángulo gatuno) ══════════════════════ */}
+            <path d={`M${CX-5},${CY+8} L${CX},${CY+14} L${CX+5},${CY+8} Q${CX},${CY+6} ${CX-5},${CY+8}Z`}
+              fill={c.nose} stroke={c.furDark} strokeWidth="1" />
 
-          {/* ── MOUTH ─────────────────────────────────────────────────────── */}
-          {isSpeaking ? (
-            /* Open mouth (speaking) */
-            <g>
-              <path
-                d={`M${CX - 8},${CY + 7} Q${CX},${CY + 18} ${CX + 8},${CY + 7}`}
-                fill={isChilitit ? '#5B5B5B' : '#4A0000'}
-                stroke={colors.furDark}
-                strokeWidth="1"
-              />
-              <ellipse cx={CX} cy={CY + 12} rx={5} ry={3} fill={colors.tongue} opacity="0.8">
-                <animate attributeName="ry" values="3;5;3" dur="0.4s" repeatCount="indefinite" />
-                <animate attributeName="rx" values="5;4;5" dur="0.4s" repeatCount="indefinite" />
+            {/* ═══════════════ BOCA ══════════════════════════════════════════ */}
+            {isSpeaking ? (
+              <g>
+                <path d={`M${CX-12},${CY+16} Q${CX},${CY+32} ${CX+12},${CY+16}`} fill={c.furDark} />
+                <ellipse cx={CX} cy={CY+23} rx={7} ry={4} fill={c.tongue} opacity="0.7">
+                  <animate attributeName="ry" values="4;6;4" dur="0.35s" repeatCount="indefinite" />
+                </ellipse>
+              </g>
+            ) : (
+              <path d={`M${CX-10},${CY+15} Q${CX},${CY+22} ${CX+10},${CY+15}`}
+                fill="none" stroke={c.mouth} strokeWidth="2" strokeLinecap="round" />
+            )}
+
+            {/* ── LINEA DE NARIZ A BOCA ────────────────────────────── */}
+            <line x1={CX} y1={CY+14} x2={CX} y2={CY+16} stroke={c.mouth} strokeWidth="1.5" strokeLinecap="round" />
+
+            {/* ═══════════════ BIGOTES ══════════════════════════════════════ */}
+            <g opacity="0.5">
+              {/* Izquierdos */}
+              <line x1={CX-48} y1={CY+2} x2={CX-16} y2={CY+8} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+              <line x1={CX-46} y1={CY+10} x2={CX-14} y2={CY+12} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+              <line x1={CX-44} y1={CY+18} x2={CX-12} y2={CY+16} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+              {/* Derechos */}
+              <line x1={CX+48} y1={CY+2} x2={CX+16} y2={CY+8} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+              <line x1={CX+46} y1={CY+10} x2={CX+14} y2={CY+12} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+              <line x1={CX+44} y1={CY+18} x2={CX+12} y2={CY+16} stroke={c.whisker} strokeWidth="1.5" strokeLinecap="round" />
+            </g>
+
+            {/* ═══════════════ GLOW al hablar ═══════════════════════════════ */}
+            {isSpeaking && (
+              <ellipse cx={CX} cy={CY-10} rx={68} ry={62} fill="none" stroke={c.glow} strokeWidth="3" opacity="0.4">
+                <animate attributeName="rx" values="62;72;62" dur="1.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.5s" repeatCount="indefinite" />
               </ellipse>
-            </g>
-          ) : (
-            /* Closed mouth — smile */
-            <path
-              d={`M${CX - 6},${CY + 5} Q${CX},${CY + 10} ${CX + 6},${CY + 5}`}
-              fill="none"
-              stroke={colors.mouth}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          )}
+            )}
 
-          {/* ── WHISKERS ──────────────────────────────────────────────────── */}
-          <g style={{ animation: isChilitit ? 'whisker-twitch-left 3s ease-in-out infinite' : 'none' }}>
-            <line x1={CX - 35} y1={CY + 2} x2={CX - 12} y2={CY + 4} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-            <line x1={CX - 33} y1={CY + 6} x2={CX - 10} y2={CY + 6} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-            <line x1={CX - 34} y1={CY + 10} x2={CX - 11} y2={CY + 8} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-          </g>
-          <g style={{ animation: isChilitit ? 'whisker-twitch-right 3.5s ease-in-out infinite' : 'none' }}>
-            <line x1={CX + 35} y1={CY + 2} x2={CX + 12} y2={CY + 4} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-            <line x1={CX + 33} y1={CY + 6} x2={CX + 10} y2={CY + 6} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-            <line x1={CX + 34} y1={CY + 10} x2={CX + 11} y2={CY + 8} stroke={colors.whisker} strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-          </g>
-
-          {/* ── SPARKLES (thinking) ───────────────────────────────────────── */}
-          {isThinking && !isChilitit && (
-            <>
-              {[
-                { x: CX + 40, y: CY - 45, delay: 0 },
-                { x: CX - 35, y: CY - 50, delay: 0.3 },
-                { x: CX + 50, y: CY - 30, delay: 0.6 },
-              ].map((s, i) => (
-                <text
-                  key={i}
-                  x={s.x}
-                  y={s.y}
-                  fontSize="10"
-                  fill={colors.collarAccent}
-                  opacity="0.8"
-                >
-                  ✦
-                  <animate attributeName="opacity" values="0;0.8;0" dur="1.5s" begin={`${s.delay}s`} repeatCount="indefinite" />
-                  <animate attributeName="y" values={`${s.y};${s.y - 15}`} dur="1.5s" begin={`${s.delay}s`} repeatCount="indefinite" />
-                </text>
-              ))}
-            </>
-          )}
-
-          {/* ── CHILITIT QUIRKY SIGNS ────────────────────────────────────── */}
-          {isThinking && isChilitit && (
-            <>
-              {[
-                { x: CX + 45, y: CY - 40, text: '?', delay: 0 },
-                { x: CX - 40, y: CY - 35, text: '...', delay: 0.4 },
-                { x: CX + 35, y: CY - 50, text: '¿', delay: 0.8 },
-              ].map((s, i) => (
-                <text
-                  key={i}
-                  x={s.x}
-                  y={s.y}
-                  fontSize="11"
-                  fill={colors.collar}
-                  fontWeight="bold"
-                  opacity="0.7"
-                >
-                  {s.text}
-                  <animate attributeName="opacity" values="0;0.7;0" dur="1.8s" begin={`${s.delay}s`} repeatCount="indefinite" />
-                  <animateTransform attributeName="transform" type="rotate" values={`0 ${s.x} ${s.y};10 ${s.x} ${s.y};-10 ${s.x} ${s.y};0 ${s.x} ${s.y}`} dur="2s" begin={`${s.delay}s`} repeatCount="indefinite" />
-                </text>
-              ))}
-            </>
-          )}
-
-          {/* ── EYEBROWS ──────────────────────────────────────────────────── */}
-          {isThinking && (
-            <>
-              <line
-                x1={CX - 28} y1={CY - 26} x2={CX - 10} y2={CY - 24}
-                stroke={isChilitit ? '#6B6B6B' : '#2D2D2D'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.6"
-              >
-                {isChilitit && (
-                  <animate attributeName="x1" values={`${CX - 28};${CX - 26};${CX - 28}`} dur="1s" repeatCount="indefinite" />
-                )}
-              </line>
-              <line
-                x1={CX + 28} y1={CY - 24} x2={CX + 10} y2={CY - 26}
-                stroke={isChilitit ? '#6B6B6B' : '#2D2D2D'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.6"
-              >
-                {isChilitit && (
-                  <animate attributeName="x1" values={`${CX + 28};${CX + 26};${CX + 28}`} dur="1s" repeatCount="indefinite" />
-                )}
-              </line>
-            </>
-          )}
-
-          {/* ── DIZZY SPIRAL (ChilitAI only) ──────────────────────────────── */}
-          {isChilitit && isThinking && (
-            <g opacity="0.4">
-              <text x={CX - 15} y={CY + 30} fontSize="8" fill="#6B6B6B" textAnchor="middle">
-                @_@
-                <animate attributeName="opacity" values="0.4;0.7;0.4" dur="1s" repeatCount="indefinite" />
-              </text>
-            </g>
-          )}
-
-          {/* ── HEART (when petted - Figaro only) ─────────────────────────── */}
-          <AnimatePresence>
-            {isPet && !isChilitit && (
-              <g>
-                {[
-                  { x: CX + 30, y: CY - 52, delay: 0 },
-                  { x: CX + 20, y: CY - 58, delay: 0.15 },
-                  { x: CX + 40, y: CY - 48, delay: 0.3 },
-                ].map((h, i) => (
-                  <text
-                    key={i}
-                    x={h.x}
-                    y={h.y}
-                    fontSize="9"
-                    fill="#FF6B8A"
-                    opacity="0.9"
-                  >
-                    ♥
-                    <animate attributeName="y" values={`${h.y};${h.y - 25}`} dur="1s" begin={`${h.delay}s`} fill="freeze" />
-                    <animate attributeName="opacity" values="0.9;0" dur="1s" begin={`${h.delay}s`} fill="freeze" />
+            {/* ═══════════════ CHISPAS (pensando) ════════════════════════════ */}
+            {isThinking && !isChili && (
+              <>
+                {[{x:CX+52,y:CY-68},{x:CX-48,y:CY-72},{x:CX+64,y:CY-42}].map((s,i)=>(
+                  <text key={i} x={s.x} y={s.y} fontSize="12" fill="#FFD700" fontWeight="bold" opacity="0.8">
+                    ✦
+                    <animate attributeName="opacity" values="0;0.8;0" dur={`${1.2+i*0.3}s`} repeatCount="indefinite" />
+                    <animate attributeName="y" values={`${s.y};${s.y-18}`} dur={`${1.2+i*0.3}s`} repeatCount="indefinite" />
                   </text>
                 ))}
-              </g>
+              </>
             )}
-          </AnimatePresence>
 
-          {/* ── ANGRY VIBES (when petted - ChilitAI only) ──────────────────── */}
-          <AnimatePresence>
-            {isPet && isChilitit && (
-              <g>
-                {[
-                  { x: CX + 35, y: CY - 45, text: '💢', delay: 0 },
-                  { x: CX - 30, y: CY - 40, text: '⚡', delay: 0.2 },
-                ].map((a, i) => (
-                  <text
-                    key={i}
-                    x={a.x}
-                    y={a.y}
-                    fontSize="10"
-                    opacity="0.8"
-                  >
-                    {a.text}
-                    <animate attributeName="y" values={`${a.y};${a.y - 20}`} dur="1s" begin={`${a.delay}s`} fill="freeze" />
-                    <animate attributeName="opacity" values="0.8;0" dur="1s" begin={`${a.delay}s`} fill="freeze" />
+            {/* ChilitAI pensando — signos de interrogación */}
+            {isThinking && isChili && (
+              <>
+                {[{x:CX+55,y:CY-62,ch:'?'},{x:CX-52,y:CY-58,ch:'¿'},{x:CX+46,y:CY-76,ch:'?'}].map((s,i)=>(
+                  <text key={i} x={s.x} y={s.y} fontSize="14" fill="#6B7280" fontWeight="bold" opacity="0.6">
+                    {s.ch}
+                    <animate attributeName="opacity" values="0;0.6;0" dur={`${1.5+i*0.4}s`} repeatCount="indefinite" />
+                    <animateTransform attributeName="transform" type="rotate" values={`0 ${s.x} ${s.y};15 ${s.x} ${s.y};-15 ${s.x} ${s.y};0 ${s.x} ${s.y}`} dur="2s" repeatCount="indefinite" />
                   </text>
                 ))}
-              </g>
+              </>
             )}
-          </AnimatePresence>
+
+            {/* ═══════════════ CORAZONES / REACCIÓN ══════════════════════════ */}
+            <AnimatePresence>
+              {isPet && !isChili && ['♥','♥','♥'].map((h,i)=>(
+                <text key={i} x={CX+(i-1)*16} y={CY-70} fontSize="10" fill="#FF4466" opacity="0.9">
+                  {h}
+                  <animate attributeName="y" values={`${CY-60};${CY-90}`} dur={`${0.6+i*0.2}s`} fill="freeze" />
+                  <animate attributeName="opacity" values="0.9;0" dur={`${0.6+i*0.2}s`} fill="freeze" />
+                </text>
+              ))}
+              {isPet && isChili && ['💢','⚡','💢'].map((h,i)=>(
+                <text key={i} x={CX+(i-1)*20} y={CY-65+i*5} fontSize="11" opacity="0.8">
+                  {h}
+                  <animate attributeName="y" values={`${CY-55-i*5};${CY-85-i*5}`} dur={`${0.5+i*0.2}s`} fill="freeze" />
+                  <animate attributeName="opacity" values="0.8;0" dur={`${0.5+i*0.2}s`} fill="freeze" />
+                </text>
+              ))}
+            </AnimatePresence>
+          </g>
         </svg>
       </motion.div>
     </>
